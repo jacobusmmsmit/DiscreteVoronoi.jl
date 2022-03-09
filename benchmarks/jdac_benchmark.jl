@@ -10,7 +10,7 @@ function get_sites(N, M, K)
     idx[1:K]
 end
 
-Random.seed!(42)
+#= Random.seed!(42)
 grid = zeros(Int, rand(1:100), rand(1:100))
 sites = get_sites(size(grid)..., 10)
 jfa!(grid, sites)
@@ -49,7 +49,7 @@ for aux! in [jdac_aux1!, jdac_aux2!, jdac_aux3!, jdac_aux4!, jdac_aux5!, jdac_au
         sites = collect(enumerate(get_sites(size(grid)..., 30))))
 end =#
 
-for n in 10:10:50
+for n in [10, 100, 1000]
     for s in [isqrt(n), n, n * isqrt(n), n * n]
         @show n, s
         println("jfa")
@@ -74,17 +74,6 @@ for n in 10:10:50
         end
     end
 end 
-
-#= using Profile
-Profile.clear()
-grid = zeros(Int, 1000, 1000)
-sites = collect(enumerate(get_sites(size(grid)..., 1000 * isqrt(1000))))
-jdac!(grid, sites, jdac_aux6!, 0)
-grid = zeros(Int, 1000, 1000)
-sites = collect(enumerate(get_sites(size(grid)..., 1000 * isqrt(1000))))
-@profile jdac!(grid, sites, jdac_aux6!, 0);
-# Profile.print()
-Juno.profiler() =#
 
 # L0(A, B) = sum(A .!= B)
 
