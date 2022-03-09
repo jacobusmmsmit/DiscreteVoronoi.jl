@@ -28,34 +28,6 @@ seeds = collect(enumerate(get_seeds(size(grid)..., 10)))
 jdac!(grid, seeds, jdac_aux1!, 0)
 @show grid
 
-Random.seed!(42)
-for i in 1:1000
-    N, M = rand(1:1000, 2)
-    local seeds = collect(enumerate(get_seeds(N, M, rand(1:100))))
-    @show N, M, length(seeds)
-
-    println("naive")
-    grid1 = @time naive_voronoi(CartesianIndices((1:N, 1:M)), map(seed -> seed[2], seeds))
-
-    println("jfa!")
-    grid2 = zeros(Int, N, M)
-    @time jfa!(grid2, map(seed -> seed[2], seeds))
-    # @assert grid2 == grid1
-
-    println("dac!")
-    grid3 = zeros(Int, N, M)
-    @time dac!(grid3, map(seed -> seed[2], seeds))
-    @assert grid3 == grid1
-
-    println("jdac!")
-    for aux! in [jdac_aux1!, jdac_aux2!, jdac_aux3!, jdac_aux4!, jdac_aux5!, jdac_aux6!]
-        @show aux!
-        grid4 = zeros(Int, N, M)
-        @time jdac!(grid4, seeds, aux!, 0)
-        @assert grid4 == grid3
-    end
-end
-
 println("jfa!")
 @btime jfa!(grid, seeds) setup=(
     Random.seed!(42);
