@@ -3,7 +3,7 @@ using .DiscreteVoronoi
 using Test
 using Random
 
-function get_seeds(N, M, K)
+function get_sites(N, M, K)
     idx = [(n, m) for n in 1:N, m in 1:M]
     shuffle!(idx)
     idx[1:K]
@@ -13,11 +13,11 @@ end
     Random.seed!(42)
     for i in 1:100
         N, M = rand(1:1000, 2)
-        seeds = collect(enumerate(get_seeds(N, M, rand(1:100))))
+        sites = collect(enumerate(get_sites(N, M, rand(1:100))))
 
-        grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(seed -> seed[2], seeds))
+        grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites))
         grid2 = zeros(Int, N, M)
-        dac!(grid2, map(seed -> seed[2], seeds))
+        dac!(grid2, map(site -> site[2], sites))
         @test grid2 == grid1
     end
 end
@@ -26,11 +26,11 @@ end
     Random.seed!(42)
     for i in 1:100
         N, M = rand(1:1000, 2)
-        seeds = collect(enumerate(get_seeds(N, M, rand(1:100))))
+        sites = collect(enumerate(get_sites(N, M, rand(1:100))))
 
-        grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(seed -> seed[2], seeds))
+        grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites))
         grid2 = zeros(Int, N, M)
-        dacx!(grid2, map(seed -> seed[2], seeds))
+        dacx!(grid2, map(site -> site[2], sites))
         @test grid2 == grid1
     end
 end
@@ -39,12 +39,12 @@ end
     Random.seed!(42)
     for i in 1:100
         N, M = rand(1:1000, 2)
-        seeds = collect(enumerate(get_seeds(N, M, rand(1:100))))
+        sites = collect(enumerate(get_sites(N, M, rand(1:100))))
 
-        grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(seed -> seed[2], seeds))
+        grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites))
         for aux! in [jdac_aux1!, jdac_aux2!, jdac_aux3!, jdac_aux4!, jdac_aux5!, jdac_aux6!]
             grid2 = zeros(Int, N, M)
-            jdac!(grid2, seeds, aux!)
+            jdac!(grid2, sites, aux!)
             @test grid2 == grid1
         end
     end
@@ -54,12 +54,12 @@ end
     Random.seed!(42)
     for i in 1:100
         N, M = rand(1:1000, 2)
-        seeds = collect(enumerate(get_seeds(N, M, rand(1:100))))
+        sites = collect(enumerate(get_sites(N, M, rand(1:100))))
 
-        grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(seed -> seed[2], seeds))
+        grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites))
         for aux! in [jdac_aux1!, jdac_aux2!, jdac_aux3!, jdac_aux4!, jdac_aux5!, jdac_aux6!]
             grid2 = zeros(Int, N, M)
-            jdacx!(grid2, seeds, aux!)
+            jdacx!(grid2, sites, aux!)
             @test grid2 == grid1
         end
     end

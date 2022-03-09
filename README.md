@@ -3,7 +3,7 @@
 This is a package for the efficient calculation of discrete voronoi diagrams.
 
 It implements the jump-flood algorithm (on the CPU, maybe we can do GPU in `CUDA.jl`),
-the divide-and-conquer algorith (link to 2020 paper), and a "seed justified" divide-
+the divide-and-conquer algorith (link to 2020 paper), and a "site justified" divide-
 and-conquer algorithm.
 
 ```
