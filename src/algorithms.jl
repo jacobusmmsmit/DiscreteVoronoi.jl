@@ -1,9 +1,9 @@
 export naive_voronoi, jfa!, dac_aux!, dac!, dacx!
 
-naive_voronoi(grid, seeds) = map(cell -> findmin(seed -> distance(cell, seed), seeds)[2], grid)
+naive_voronoi(grid, sites) = map(cell -> findmin(site -> distance(cell, site), sites)[2], grid)
 
-function jfa!(grid, seeds)
-    for (color, (x, y)) in enumerate(seeds)
+function jfa!(grid, sites)
+    for (color, (x, y)) in enumerate(sites)
         grid[x, y] = convert(eltype(grid), color)
     end
     k = max(size(grid)...)
@@ -17,7 +17,7 @@ function jfa!(grid, seeds)
                 colorp = grid[x, y]
                 if colorp === 0
                     grid[x, y] = colorq
-                elseif distance(seeds[colorp], (x, y)) > distance(seeds[colorq], (x, y))
+                elseif distance(sites[colorp], (x, y)) > distance(sites[colorq], (x, y))
                     grid[x, y] = colorq
                 end
             end
@@ -26,17 +26,17 @@ function jfa!(grid, seeds)
     return grid
 end
 
-function dac_aux!(grid, seeds, depth)
+function dac_aux!(grid, sites, depth)
     if all(.>(0), size(grid)) && any(==(0), grid)
-        dac!(grid, seeds, depth - 1)
+        dac!(grid, sites, depth - 1)
     end
     return grid
 end
 
-function dac!(grid, seeds, depth=1)
+function dac!(grid, sites, depth=1)
     N, M = size(grid)
     corners = ((1, 1), (N, 1), (1, M), (N, M))
-    nearest_colors = map(corner -> findmin(seed -> distance(corner, seed), seeds)[2], corners)
+    nearest_colors = map(corner -> findmin(site -> distance(corner, site), sites)[2], corners)
     color = nearest_colors[1]
     if all(nearest_color -> nearest_color == color, nearest_colors[2:end])
         grid .= convert(eltype(grid), color)
@@ -51,23 +51,23 @@ function dac!(grid, seeds, depth=1)
         sub_grids = (tl_grid, bl_grid, tr_grid, br_grid)
         if depth > 0
             Threads.@threads for i in 1:4
-                thread_seeds = map(seed -> seed .- offsets[i], seeds)
-                dac_aux!(sub_grids[i], thread_seeds, depth)
+                thread_sites = map(site -> site .- offsets[i], sites)
+                dac_aux!(sub_grids[i], thread_sites, depth)
             end
         else
             for i in 1:4
-                replace!(seed -> seed .- offsets[i], seeds)
-                dac_aux!(sub_grids[i], seeds, depth)
-                replace!(seed -> seed .+ offsets[i], seeds)
+                replace!(site -> site .- offsets[i], sites)
+                dac_aux!(sub_grids[i], sites, depth)
+                replace!(site -> site .+ offsets[i], sites)
             end
         end
     end
     return grid
 end
 
-function dacx!(grid, seeds, depth=1)
-    for (color, (x, y)) in enumerate(seeds)
+function dacx!(grid, sites, depth=1)
+    for (color, (x, y)) in enumerate(sites)
         grid[x, y] = convert(eltype(grid), color)
     end
-    dac!(grid, seeds, depth)
+    dac!(grid, sites, depth)
 end
