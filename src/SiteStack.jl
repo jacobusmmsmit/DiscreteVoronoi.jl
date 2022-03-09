@@ -3,22 +3,25 @@
 #######################################################################################
 export SiteStack
 
-mutable struct SiteStack{T}
+mutable struct SiteStack{DT, ST<:Tuple{T1, Tuple{T2, T2}} where {T1, T2}}
     depth::Int
-    dists::Vector{Vector{T}}
-    sites::Vector{Vector{Tuple{Int, Tuple{Int, Int}}}}
-    SiteStack() = new{Float64}(0, Vector{Vector{Float64}}(), Vector{Vector{Tuple{Int, Tuple{Int, Int}}}}())
+    dists::Vector{Vector{DT}}
+    sites::Vector{Vector{ST}}
+    SiteStack{DT, ST}() where {DT, ST} = new{DT, ST}(0, Vector{Vector{DT}}(), Vector{Vector{ST}}())
 end
 
-SiteStack(::T) where T = new(0, Vector{Vector{T}}(), Vector{Vector{Tuple{Int, Tuple{Int, Int}}}}())
+SiteStack(::DT, ::ST) where {DT, ST} = new(0, Vector{Vector{DT}}(), Vector{Vector{ST}}())
 
-function push_empty!(stack::SiteStack{T}) where T
+disttype(::SiteStack{DT, ST}) where {DT, ST} = DT
+sitetype(::SiteStack{DT, ST}) where {DT, ST} = ST
+
+function push_empty!(stack::SiteStack{DT, ST}) where {DT, ST}
     stack.depth += 1
     if stack.depth > length(stack.dists)
-        push!(stack.dists, Vector{T}())
+        push!(stack.dists, Vector{DT}())
     end
     if stack.depth > length(stack.sites)
-        push!(stack.sites, Vector{Tuple{Int, Tuple{Int, Int}}}())
+        push!(stack.sites, Vector{ST}())
     end
     stack.depth
 end

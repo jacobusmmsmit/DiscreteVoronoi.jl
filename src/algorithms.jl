@@ -66,8 +66,11 @@ function dac!(grid, sites, depth=1)
 end
 
 function dacx!(grid, sites, depth=1)
-    for (color, (x, y)) in enumerate(sites)
-        grid[x, y] = convert(eltype(grid), color)
+    for (color, point) in enumerate(sites)
+        nearest_point = nearest(point)
+        if 1 <= nearest_point[1] <= size(grid, 1) && 1 <= nearest_point[2] <= size(grid, 2)
+            grid[nearest_point...] = convert(eltype(grid), color)
+        end
     end
     dac!(grid, sites, depth)
 end
