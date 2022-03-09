@@ -4,7 +4,7 @@ function jdac_aux1!(grid, sites, depth, stack)
     if all(.>(0), size(grid)) && any(==(0), grid)
         center = size(grid) .÷ 2 .+ size(grid) .% 2
         max_dist = findmin(site -> distance(center, site[2]), sites)[1] + distance((0, 0), size(grid)) + 1
-        stack_sites = filter(site -> distance(center, site[2]) <= max_dist, sites)
+        stack_sites = filter(site -> distance(center, site[2]) <= max_dist, sites) 
         jdac!(grid, stack_sites, jdac_aux1!, depth - 1, stack)
     end
     grid
@@ -77,7 +77,7 @@ function jdac_aux6!(grid, sites, depth, stack)
     grid
 end
 
-function jdac!(grid, sites, aux!, depth=1, stack=SiteStack())
+function jdac!(grid, sites, aux!, depth=1, stack=SiteStack{Float64, eltype(sites)}()) 
     N, M = size(grid)
     corners = ((1, 1), (N, 1), (1, M), (N, M))
     nearest_colors = map(corner -> findmin(site -> distance(corner, site[2]), sites)[2], corners)
@@ -96,7 +96,7 @@ function jdac!(grid, sites, aux!, depth=1, stack=SiteStack())
         if depth > 0
             Threads.@threads for i in 1:4
                 thread_sites = map(site -> (site[1], site[2] .- offsets[i]), sites)
-                aux!(sub_grids[i], thread_sites, depth, SiteStack())
+                aux!(sub_grids[i], thread_sites, depth, SiteStack{Float64, eltype(sites)}())
             end
         else
             for i in 1:4
@@ -109,9 +109,12 @@ function jdac!(grid, sites, aux!, depth=1, stack=SiteStack())
     grid
 end
 
-function jdacx!(grid, sites, aux!, depth=1, stack=SiteStack())
-    for (color, (x, y)) in sites
-        grid[x, y] = convert(eltype(grid), color)
+function jdacx!(grid, sites, aux!, depth=1, stack=SiteStack{Float64, eltype(sites)}())
+    for (color, point) in sites
+        nearest_point = nearest(point)
+        if 1 <= nearest_point[1] <= size(grid, 1) && 1 <= nearest_point[2] <= size(grid, 2)
+            grid[nearest_point...] = convert(eltype(grid), color)
+        end
     end
     jdac!(grid, sites, aux!, depth, stack)
 end
