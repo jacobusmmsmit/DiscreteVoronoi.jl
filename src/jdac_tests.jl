@@ -1,4 +1,4 @@
-export jdac!, jdacx!, jdac_aux1!, jdac_aux2!, jdac_aux3!, jdac_aux4!, jdac_aux5!, jdac_aux6!
+export jdac!, jdacx!, jdac_aux1!, jdac_aux2!, jdac_aux3!, jdac_aux4!, jdac_aux5!, jdac_aux6!, jdac_aux7!
 
 function jdac_aux1!(grid, sites, depth, stack)
     if all(.>(0), size(grid)) && any(==(0), grid)
@@ -73,6 +73,18 @@ function jdac_aux6!(grid, sites, depth, stack)
         fill_sites!(max_dist, sites, stack)
         jdac!(grid, get_sites(stack), jdac_aux6!, depth - 1, stack)
         pop!(stack)
+    end
+    grid
+end
+
+function jdac_aux7!(grid, sites, depth, stack)
+    if all(.>(0), size(grid)) && any(==(0), grid)
+        N, M = size(grid)
+        center = size(grid) .÷ 2 .+ size(grid) .% 2
+        min_site = sites[findmin(site -> distance(center, site[2]), sites)[2]][2]
+        corners = ((1, 1), (N, 1), (1, M), (N, M))
+        stack_sites = filter(site -> mapreduce(corner -> distance(corner, site[2]) <= distance(corner, min_site), (x, y) -> x && y, corners), sites)
+        jdac!(grid, stack_sites, jdac_aux7!, depth - 1, stack)
     end
     grid
 end
