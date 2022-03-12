@@ -3,14 +3,13 @@ using .DiscreteVoronoi
 using Random
 using BenchmarkTools
 
-
 function get_sites(N, M, K)
     idx = [(n, m) for n in 1:N, m in 1:M]
     shuffle!(idx)
     idx[1:K]
 end
 
-#= Random.seed!(42)
+Random.seed!(42)
 grid = zeros(Int, rand(1:100), rand(1:100))
 sites = get_sites(size(grid)..., 10)
 jfa!(grid, sites)
@@ -28,56 +27,9 @@ sites = collect(enumerate(get_sites(size(grid)..., 10)))
 jdac!(grid, sites, jdac_aux1!, 0)
 @show grid
 
-println("jfa!")
-@btime jfa!(grid, sites) setup=(
-    Random.seed!(42);
-    grid = zeros(Int, 100, 40);
-    sites = get_sites(size(grid)..., 30))
+L0(A, B) = sum(A .!= B)
 
-println("dac!")
-@btime dac!(grid, sites) setup=(
-    Random.seed!(42);
-    grid = zeros(Int, 100, 40);
-    sites = get_sites(size(grid)..., 30))
-
-println("jdac!")
-for aux! in [jdac_aux1!, jdac_aux2!, jdac_aux3!, jdac_aux4!, jdac_aux5!, jdac_aux6!, jdac_aux7!]
-    @show aux!
-    @btime jdac!(grid, sites, $aux!) setup=(
-        Random.seed!(42);
-        grid = zeros(Int, 100, 40);
-        sites = collect(enumerate(get_sites(size(grid)..., 30))))
-end =#
-
-for n in [10, 100, 1000]
-    for s in [isqrt(n), n, n * isqrt(n), n * n]
-        @show n, s
-        println("jfa")
-        @btime jfa!(grid, sites) setup=(
-            Random.seed!(42);
-            grid = zeros(Int, $n, $n);
-            sites = get_sites(size(grid)..., $s))
-
-        #= println("dac!")
-        @btime dac!(grid, sites) setup=(
-            Random.seed!(42);
-            grid = zeros(Int32, $n, $n);
-            sites = get_sites(size(grid)..., $s)) =#
-
-        println("jdac")
-        for aux! in [jdac_aux1!, jdac_aux2!, jdac_aux3!, jdac_aux4!, jdac_aux5!, jdac_aux6!]
-            @show aux!
-            @btime jdacx!(grid, sites, $aux!) setup=(
-                Random.seed!(42);
-                grid = zeros(Int, $n, $n);
-                sites = collect(enumerate(get_sites(size(grid)..., $s))))
-        end
-    end
-end 
-
-# L0(A, B) = sum(A .!= B)
-
-#= begin
+begin
     # time_naive = Float64[]
     time_jfa = Float64[]
     # time_dac = Float64[]
@@ -99,11 +51,11 @@ end
             push!(time_jfa, @belapsed jfa!($grid2, $sites))
 
             #= grid3 = zeros(Int, N, M)
-            push!(time_dac, @belapsed dac!($grid3, $sites, 0)) =#
+            push!(time_dac, @belapsed dacx!($grid3, $sites, 0)) =#
 
             grid4 = zeros(Int, N, M)
             sites2 = collect(enumerate(sites))
-            push!(time_jdac, @belapsed jdac!($grid4, $sites2, 0))
+            push!(time_jdac, @belapsed jdac!($grid4, $sites2, jdac_aux6!))
             # println("N. errors in JFA: ", L0(grid3, grid2))
             # println("N. errors in jdac: ", L0(grid3, grid4))
         end
@@ -138,5 +90,5 @@ begin
 
     # plot(times_plot, times_plot_fast, size = (1000, 500), margin = 3mm)
     plot(times_plot, times_plot_fast, size = (1000, 500))
-end =#
+end
 
