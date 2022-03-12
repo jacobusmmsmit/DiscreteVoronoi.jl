@@ -83,7 +83,7 @@ function jdac_aux7!(grid, sites, depth, stack)
         center = size(grid) .÷ 2 .+ size(grid) .% 2
         min_site = sites[findmin(site -> distance(center, site[2]), sites)[2]][2]
         corners = ((1, 1), (N, 1), (1, M), (N, M))
-        stack_sites = filter(site -> mapreduce(corner -> distance(corner, site[2]) <= distance(corner, min_site), (x, y) -> x && y, corners), sites)
+        stack_sites = filter(site -> mapreduce(corner -> distance(corner, site[2]) <= distance(corner, min_site), (x, y) -> x || y, corners), sites)
         jdac!(grid, stack_sites, jdac_aux7!, depth - 1, stack)
     end
     grid
