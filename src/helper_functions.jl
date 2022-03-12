@@ -1,7 +1,9 @@
-function distance(p, q)
-    @fastmath sqrt((p[1] - q[1])^2 + (p[2] - q[2])^2)
+using LinearAlgebra
+
+function distance(x, y, p::Real=2)
+    norm((x[1] - y[1], x[2] - y[2]), p)
 end
 
-function nearest(p)
-    (round(Int, p[1]), round(Int, p[2]))
+function nearest(x)
+    (round(Int, x[1]), round(Int, x[2]))
 end
