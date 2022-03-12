@@ -1,4 +1,26 @@
-export jdac!, jdacx!, jdac_aux1!, jdac_aux2!, jdac_aux3!, jdac_aux4!, jdac_aux5!, jdac_aux6!, jdac_aux7!
+export jdac!, jdacx!, jdac_aux0!, jdac_aux1!, jdac_aux2!, jdac_aux3!, jdac_aux4!, jdac_aux5!, jdac_aux6!, jdac_aux7!
+
+function exact_site_filter(sites, corners)
+    filter(
+        candidate -> mapreduce(
+            site -> mapreduce(
+                corner -> distance(site[2], corner) <= distance(candidate[2], corner),
+                (x, y) -> x&&y,
+                corners),
+            (x, y) -> x||y,
+            sites),
+        sites)
+end
+
+function jdac_aux0!(grid, sites, depth, stack)
+    if all(.>(0), size(grid)) && any(==(0), grid)
+        N, M = size(grid)
+        corners = ((1, 1), (N, 1), (1, M), (N, M))
+        stack_sites = exact_site_filter(sites, corners)
+        jdac!(grid, stack_sites, jdac_aux1!, depth - 1, stack)
+    end
+    grid
+end
 
 function jdac_aux1!(grid, sites, depth, stack)
     if all(.>(0), size(grid)) && any(==(0), grid)
