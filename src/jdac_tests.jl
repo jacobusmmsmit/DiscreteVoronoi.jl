@@ -1,13 +1,23 @@
 export jdac!, jdacx!, jdac_aux0!, jdac_aux1!, jdac_aux2!, jdac_aux3!, jdac_aux4!, jdac_aux5!, jdac_aux6!, jdac_aux7!
 
 function exact_site_filter(sites, corners)
-    filter(
-        candidate -> any(
-            site -> all(
-                corner -> distance(site[2], corner) <= distance(candidate[2], corner),
-                corners),
-            sites),
-        sites)
+    include = fill(false, length(sites))
+    for (i, s) in sites
+        include[i] = true
+        for (j, t) in sites
+            nc = 0
+            for c in corners
+                if distance(s, c) <= distance(t, c)
+                    break
+                end
+                nc += 1
+            end
+            if nc == 4
+                include[i] = false
+            end
+        end
+    end
+    return sites[include]
 end
 
 function jdac_aux0!(grid, sites, depth, stack)
