@@ -2,12 +2,10 @@ export jdac!, jdacx!, jdac_aux0!, jdac_aux1!, jdac_aux2!, jdac_aux3!, jdac_aux4!
 
 function exact_site_filter(sites, corners)
     filter(
-        candidate -> mapreduce(
-            site -> mapreduce(
+        candidate -> any(
+            site -> all(
                 corner -> distance(site[2], corner) <= distance(candidate[2], corner),
-                (x, y) -> x&&y,
                 corners),
-            (x, y) -> x||y,
             sites),
         sites)
 end
