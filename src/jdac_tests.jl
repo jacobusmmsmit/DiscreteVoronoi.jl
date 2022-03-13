@@ -66,11 +66,14 @@ end
 
 function jdac_aux4!(grid, sites, p, depth, stack)
     if all(.>(0), size(grid)) && any(==(0), grid)
-        N, M = size(grid)
         center = size(grid) ./ 2
-        min_site = sites[findmin(site -> distance(center, site[2], p), sites)[2]][2]
+        dist, index = findmin(site -> distance(center, site[2], p), sites)
+        max_dist = dist + norm(size(grid), p) + 1
+        min_site = sites[index][2]
+        N, M = size(grid)
         corners = ((1, 1), (N, 1), (1, M), (N, M))
-        max_dist = maximum(corner -> distance(corner, min_site, p), corners) + norm(center, p) + 1
+        dist = maximum(corner -> distance(corner, min_site, p), corners) + norm(center, p) + 1
+        max_dist = min(max_dist, dist)
         stack_sites = filter(site -> distance(center, site[2], p) <= max_dist, sites)
         jdac!(grid, stack_sites, jdac_aux4!, p, depth - 1, stack)
     end
@@ -79,12 +82,15 @@ end
 
 function jdac_aux5!(grid, sites, p, depth, stack)
     if all(.>(0), size(grid)) && any(==(0), grid)
-        N, M = size(grid)
         center = size(grid) ./ 2
         dists = map(site -> distance(center, site[2], p), sites)
-        min_site = sites[findmin(dists)[2]][2]
+        dist, index = findmin(dists)
+        max_dist = dist + norm(size(grid), p) + 1
+        min_site = sites[index][2]
+        N, M = size(grid)
         corners = ((1, 1), (N, 1), (1, M), (N, M))
-        max_dist = maximum(corner -> distance(corner, min_site, p), corners) + norm(center, p) + 1
+        dist = maximum(corner -> distance(corner, min_site, p), corners) + norm(center, p) + 1
+        max_dist = min(max_dist, dist)
         stack_sites = [site for (dist, site) in zip(dists, sites) if dist <= max_dist]
         jdac!(grid, stack_sites, jdac_aux5!, p, depth - 1, stack)
     end
@@ -93,13 +99,16 @@ end
 
 function jdac_aux6!(grid, sites, p, depth, stack)
     if all(.>(0), size(grid)) && any(==(0), grid)
-        N, M = size(grid)
-        center = size(grid) ./ 2
         push_empty!(stack)
+        center = size(grid) ./ 2
         fill_dists!(center, sites, stack, p)
-        min_site = sites[findmin(get_dists(stack))[2]]
+        dist, index = findmin(get_dists(stack))
+        max_dist = dist + norm(size(grid), p) + 1
+        min_site = sites[index][2]
+        N, M = size(grid)
         corners = ((1, 1), (N, 1), (1, M), (N, M))
-        max_dist = maximum(corner -> distance(corner, min_site[2], p), corners) + norm(center, p) + 1
+        dist = maximum(corner -> distance(corner, min_site, p), corners) + norm(center, p) + 1
+        max_dist = min(max_dist, dist)
         fill_sites!(max_dist, sites, stack)
         jdac!(grid, get_sites(stack), jdac_aux6!, p, depth - 1, stack)
         pop!(stack)
