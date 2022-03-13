@@ -2,12 +2,12 @@ export jdac!, jdacx!, jdac_aux0!, jdac_aux1!, jdac_aux2!, jdac_aux3!, jdac_aux4!
 
 function exact_site_filter(sites, corners, p)
     include = fill(false, length(sites))
-    for (i, s) in sites
+    for (i, s) in enumerate(sites)
         include[i] = true
-        for (j, t) in sites
+        for (j, t) in enumerate(sites)
             nc = 0
             for c in corners
-                if distance(s, c, p) <= distance(t, c, p)
+                if distance(s[2], c, p) <= distance(t[2], c, p)
                     break
                 end
                 nc += 1
