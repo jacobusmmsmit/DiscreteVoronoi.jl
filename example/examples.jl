@@ -24,7 +24,7 @@ dac!(grid, sites, 0)
 Random.seed!(42)
 grid = zeros(Int, rand(1:100), rand(1:100))
 sites = collect(enumerate(get_sites(size(grid)..., 10)))
-jdac!(grid, sites, jdac_aux1!, 0)
+jdac!(grid, sites, jdac_aux1a!, 0)
 @show grid
 
 L0(A, B) = sum(A .!= B)
@@ -55,7 +55,7 @@ begin
 
             grid4 = zeros(Int, N, M)
             sites2 = collect(enumerate(sites))
-            push!(time_jdac, @belapsed jdac!($grid4, $sites2, jdac_aux6!))
+            push!(time_jdac, @belapsed jdac!($grid4, $sites2, jdac_aux2c!))
             # println("N. errors in JFA: ", L0(grid3, grid2))
             # println("N. errors in jdac: ", L0(grid3, grid4))
         end
