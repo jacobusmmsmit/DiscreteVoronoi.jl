@@ -97,7 +97,7 @@ end
             sites = collect(enumerate(get_sites(Int, N, M, rand(1:100))))
 
             grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites), p)
-            for aux! in [jdac_aux1!, jdac_aux2!, jdac_aux3!, jdac_aux4!, jdac_aux5!, jdac_aux6!, jdac_aux7!]
+            for aux! in [jdac_aux0!, jdac_aux1!, jdac_aux2!, jdac_aux3!, jdac_aux4!, jdac_aux5!, jdac_aux6!, jdac_aux7!]
                 grid2 = zeros(Int, N, M)
                 jdac!(grid2, sites, aux!, p)
                 @test grid2 == grid1
@@ -114,7 +114,7 @@ end
             sites = collect(enumerate(get_sites(Float64, N, M, rand(1:100))))
 
             grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites), p)
-            for aux! in [jdac_aux1!, jdac_aux2!, jdac_aux3!, jdac_aux4!, jdac_aux5!, jdac_aux6!, jdac_aux7!]
+            for aux! in [jdac_aux0!, jdac_aux1!, jdac_aux2!, jdac_aux3!, jdac_aux4!, jdac_aux5!, jdac_aux6!, jdac_aux7!]
                 grid2 = zeros(Int, N, M)
                 jdac!(grid2, sites, aux!, p)
                 @test grid2 == grid1
@@ -131,7 +131,7 @@ end
             sites = collect(enumerate(get_sites(Int, N, M, rand(1:100))))
 
             grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites), p)
-            for aux! in [jdac_aux1!, jdac_aux2!, jdac_aux3!, jdac_aux4!, jdac_aux5!, jdac_aux6!, jdac_aux7!]
+            for aux! in [jdac_aux0!, jdac_aux1!, jdac_aux2!, jdac_aux3!, jdac_aux4!, jdac_aux5!, jdac_aux6!, jdac_aux7!]
                 grid2 = zeros(Int, N, M)
                 jdacx!(grid2, sites, aux!, p)
                 @test grid2 == grid1
@@ -148,7 +148,7 @@ end
             sites = collect(enumerate(get_sites(Float64, N, M, rand(1:100))))
 
             grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites), p)
-            for aux! in [jdac_aux1!, jdac_aux2!, jdac_aux3!, jdac_aux4!, jdac_aux5!, jdac_aux6!, jdac_aux7!]
+            for aux! in [jdac_aux0!, jdac_aux1!, jdac_aux2!, jdac_aux3!, jdac_aux4!, jdac_aux5!, jdac_aux6!, jdac_aux7!]
                 grid2 = zeros(Int, N, M)
                 @test isa(jdacx!(grid2, sites, aux!), Matrix)
             end
