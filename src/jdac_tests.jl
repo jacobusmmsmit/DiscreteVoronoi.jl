@@ -8,7 +8,7 @@ Returns sites such that there does not exist a site such that all corners
 are closer to the site than the candidate.
 """
 function exact_site_filter(sites, corners, p)
-    new_sites = filter(sites) do i_s
+    filter(sites) do i_s
         s = i_s[2]
         include = true
         for (_, t) in sites
@@ -23,10 +23,8 @@ function exact_site_filter(sites, corners, p)
                 include = false
             end
         end
-        return include # do-block return
+        include
     end
-    # Explicit function return for clarity
-    return new_sites
 end
 
 function jdac_aux0!(grid, sites, p, depth, stack)
