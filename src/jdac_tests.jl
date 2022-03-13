@@ -134,12 +134,12 @@ function jdac!(grid, sites, aux!, p::Real=2, depth::Int=1, stack=SiteStack{Float
         min_dist, min_index = findmin(site -> distance(size(grid), site[2], p), sites)
         grid .= convert(eltype(grid), sites[min_index][1])
     else
-        center = size(grid) ./ 2
+        #= center = size(grid) ./ 2
         min_dist, min_index = findmin(site -> distance(center, site[2], p), sites)
         dist, _ = findmin(site -> distance(center, site[2], p), @view sites[1:end .!= min_index])
         if dist > min_dist + norm(size(grid), p) + 1
             grid .= convert(eltype(grid), sites[min_index][1])
-        else
+        else =#
             Nd = N ÷ 2 + N % 2
             Md = M ÷ 2 + M % 2
             offsets = ((0, 0), (Nd, 0), (0, Md), (Nd, Md))
@@ -160,7 +160,7 @@ function jdac!(grid, sites, aux!, p::Real=2, depth::Int=1, stack=SiteStack{Float
                     replace!(site -> (site[1], site[2] .+ offsets[i]), sites)
                 end
             end
-        end
+        # end
     end
     grid
 end
