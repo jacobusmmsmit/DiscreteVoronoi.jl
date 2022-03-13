@@ -4,15 +4,15 @@ using Test
 using Random
 using Distributions
 
-const REPETITIONS = 10
+const REPETITIONS = 1
 
 function get_sites(::Type{Int}, N, M, K)
-    idx = [(n, m) for n in 1:N, m in 1:M]
+    idx = collect(Iterators.product(1:N, 1:M))
     shuffle!(idx)
     idx[1:K]
 end
 
-function get_sites(::Type{T}, N, M, K) where T<:AbstractFloat
+function get_sites(::Type{T}, N, M, K) where {T<:AbstractFloat}
     [(rand(Uniform(0, N)), rand(Uniform(0, M))) for k in 1:K]
 end
 
@@ -73,7 +73,7 @@ end
             @test grid2 == grid1
         end
     end
-end 
+end
 
 @testset "dacx! working for Float64 sites" begin
     Random.seed!(42)
@@ -87,7 +87,7 @@ end
             @test isa(dacx!(grid2, map(site -> site[2], sites), p), Matrix)
         end
     end
-end 
+end
 
 @testset "jdac! matching results for Int sites" begin
     Random.seed!(42)
@@ -154,4 +154,4 @@ end
             end
         end
     end
-end 
+end
