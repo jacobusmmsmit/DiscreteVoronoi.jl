@@ -4,6 +4,8 @@ using Test
 using Random
 using Distributions
 
+const REPEATS = 10
+
 function get_sites(::Type{Int}, N, M, K)
     idx = [(n, m) for n in 1:N, m in 1:M]
     shuffle!(idx)
@@ -17,7 +19,7 @@ end
 @testset "jfa! working for Int sites" begin
     Random.seed!(42)
     for p in [1, 2, Inf]
-        for i in 1:100
+        for i in 1:REPEATS
             N, M = rand(1:1000, 2)
             sites = collect(enumerate(get_sites(Int, N, M, rand(1:100))))
 
@@ -31,7 +33,7 @@ end
 @testset "dac! matching results for Int sites" begin
     Random.seed!(42)
     for p in [1, 2, Inf]
-        for i in 1:100
+        for i in 1:REPEATS
             N, M = rand(1:1000, 2)
             sites = collect(enumerate(get_sites(Int, N, M, rand(1:100))))
 
@@ -46,7 +48,7 @@ end
 @testset "dac! matching results for Float64 sites" begin
     Random.seed!(42)
     for p in [1, 2, Inf]
-        for i in 1:100
+        for i in 1:REPEATS
             N, M = rand(1:1000, 2)
             sites = collect(enumerate(get_sites(Float64, N, M, rand(1:100))))
 
@@ -61,7 +63,7 @@ end
 @testset "dacx! matching results for Int sites" begin
     Random.seed!(42)
     for p in [1, 2, Inf]
-        for i in 1:100
+        for i in 1:REPEATS
             N, M = rand(1:1000, 2)
             sites = collect(enumerate(get_sites(Int, N, M, rand(1:100))))
 
@@ -76,7 +78,7 @@ end
 @testset "dacx! working for Float64 sites" begin
     Random.seed!(42)
     for p in [1, 2, Inf]
-        for i in 1:100
+        for i in 1:REPEATS
             N, M = rand(1:1000, 2)
             sites = collect(enumerate(get_sites(Float64, N, M, rand(1:100))))
 
@@ -85,12 +87,12 @@ end
             @test isa(dacx!(grid2, map(site -> site[2], sites), p), Matrix)
         end
     end
-end 
+end
 
 @testset "jdac! matching results for Int sites" begin
     Random.seed!(42)
     for p in [1, 2, Inf]
-        for i in 1:100
+        for i in 1:REPEATS
             N, M = rand(1:1000, 2)
             sites = collect(enumerate(get_sites(Int, N, M, rand(1:100))))
 
@@ -107,7 +109,7 @@ end
 @testset "jdac! matching results for Float64 sites" begin
     Random.seed!(42)
     for p in [1, 2, Inf]
-        for i in 1:100
+        for i in 1:REPEATS
             N, M = rand(1:1000, 2)
             sites = collect(enumerate(get_sites(Float64, N, M, rand(1:100))))
 
@@ -124,7 +126,7 @@ end
 @testset "jdacx! matching results for Int sites" begin
     Random.seed!(42)
     for p in [1, 2, Inf]
-        for i in 1:100
+        for i in 1:REPEATS
             N, M = rand(1:1000, 2)
             sites = collect(enumerate(get_sites(Int, N, M, rand(1:100))))
 
@@ -141,7 +143,7 @@ end
 @testset "jdacx! working for Float64 sites" begin
     Random.seed!(42)
     for p in [1, 2, Inf]
-        for i in 1:100
+        for i in 1:REPEATS
             N, M = rand(1:1000, 2)
             sites = collect(enumerate(get_sites(Float64, N, M, rand(1:100))))
 
@@ -152,4 +154,4 @@ end
             end
         end
     end
-end
+end 
