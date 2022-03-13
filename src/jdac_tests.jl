@@ -134,33 +134,26 @@ function jdac!(grid, sites, aux!, p::Real=2, depth::Int=1, stack=SiteStack{Float
         min_dist, min_index = findmin(site -> distance(size(grid), site[2], p), sites)
         grid .= convert(eltype(grid), sites[min_index][1])
     else
-        #= center = size(grid) ./ 2
-        min_dist, min_index = findmin(site -> distance(center, site[2], p), sites)
-        dist, _ = findmin(site -> distance(center, site[2], p), @view sites[1:end .!= min_index])
-        if dist > min_dist + norm(size(grid), p) + 1
-            grid .= convert(eltype(grid), sites[min_index][1])
-        else =#
-            Nd = N ÷ 2 + N % 2
-            Md = M ÷ 2 + M % 2
-            offsets = ((0, 0), (Nd, 0), (0, Md), (Nd, Md))
-            tl_grid = @view grid[1:Nd, 1:Md]
-            bl_grid = @view grid[Nd+1:N, 1:Md]
-            tr_grid = @view grid[1:Nd, Md+1:M]
-            br_grid = @view grid[Nd+1:N, Md+1:M]
-            sub_grids = (tl_grid, bl_grid, tr_grid, br_grid)
-            if depth > 0
-                Threads.@threads for i in 1:4
-                    thread_sites = map(site -> (site[1], site[2] .- offsets[i]), sites)
-                    aux!(sub_grids[i], thread_sites, p, depth, SiteStack{Float64, eltype(sites)}())
-                end
-            else
-                for i in 1:4
-                    replace!(site -> (site[1], site[2] .- offsets[i]), sites)
-                    aux!(sub_grids[i], sites, p, depth, stack)
-                    replace!(site -> (site[1], site[2] .+ offsets[i]), sites)
-                end
+        Nd = N ÷ 2 + N % 2
+        Md = M ÷ 2 + M % 2
+        offsets = ((0, 0), (Nd, 0), (0, Md), (Nd, Md))
+        tl_grid = @view grid[1:Nd, 1:Md]
+        bl_grid = @view grid[Nd+1:N, 1:Md]
+        tr_grid = @view grid[1:Nd, Md+1:M]
+        br_grid = @view grid[Nd+1:N, Md+1:M]
+        sub_grids = (tl_grid, bl_grid, tr_grid, br_grid)
+        if depth > 0
+            Threads.@threads for i in 1:4
+                thread_sites = map(site -> (site[1], site[2] .- offsets[i]), sites)
+                aux!(sub_grids[i], thread_sites, p, depth, SiteStack{Float64, eltype(sites)}())
             end
-        # end
+        else
+            for i in 1:4
+                replace!(site -> (site[1], site[2] .- offsets[i]), sites)
+                aux!(sub_grids[i], sites, p, depth, stack)
+                replace!(site -> (site[1], site[2] .+ offsets[i]), sites)
+            end
+        end
     end
     grid
 end
