@@ -61,16 +61,16 @@ function pop!(stack::SiteStack)
     stack.depth -= 1
 end
 
-function fill_dists!(center, sites, stack::SiteStack)
+function fill_dists!(center, sites, stack::SiteStack, p::Real=2)
     #= push_empty!(stack)
     len = 0
     for site in sites
         len += 1
-        append_dist!(stack, len, distance(center, site[2]))
+        append_dist!(stack, len, distance(center, site[2], p))
     end
     resize_dists!(stack, len) =#
     resize_dists!(stack, length(sites))
-    copyto!(get_dists(stack), distance(center, site[2]) for site in sites)
+    copyto!(get_dists(stack), distance(center, site[2], p) for site in sites)
     # get_dists(stack)
 end
 

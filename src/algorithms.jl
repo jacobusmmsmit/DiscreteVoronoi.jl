@@ -1,3 +1,5 @@
+using OffsetArrays
+
 export naive_voronoi, jfa!, dac_aux!, dac!, dacx!
 
 naive_voronoi(grid, sites, p::Real=2) = map(cell -> findmin(site -> distance(cell, site, p), sites)[2], grid)
@@ -35,34 +37,39 @@ end
 
 function dac!(grid, sites, p::Real=2, depth::Int=1)
     N, M = size(grid)
-    corners = ((1, 1), (N, 1), (1, M), (N, M))
-    nearest_colors = map(corner -> findmin(site -> distance(corner, site, p), sites)[2], corners)
-    color = nearest_colors[1]
-    if all(nearest_color -> nearest_color == color, nearest_colors[2:end])
-        grid .= convert(eltype(grid), color)
+    if (N == 1 && M == 1) || length(sites) == 1
+        min_dist, min_index = findmin(site -> distance(size(grid), site, p), sites)
+        grid .= convert(eltype(grid), min_index)
     else
-        Nd = N ÷ 2 + N % 2
-        Md = M ÷ 2 + M % 2
-        offsets = ((0, 0), (Nd, 0), (0, Md), (Nd, Md))
-        tl_grid = @view grid[1:Nd, 1:Md]
-        bl_grid = @view grid[Nd+1:N, 1:Md]
-        tr_grid = @view grid[1:Nd, Md+1:M]
-        br_grid = @view grid[Nd+1:N, Md+1:M]
-        sub_grids = (tl_grid, bl_grid, tr_grid, br_grid)
-        if depth > 0
-            Threads.@threads for i in 1:4
-                thread_sites = map(site -> site .- offsets[i], sites)
-                dac_aux!(sub_grids[i], thread_sites, p, depth)
-            end
+        center = size(grid) ./ 2
+        min_dist, min_index = findmin(site -> distance(center, site, p), sites)
+        dist, _ = findmin(site -> distance(center, site, p), @view sites[1:end .!= min_index])
+        if dist > min_dist + norm(size(grid), p) + 1
+            grid .= convert(eltype(grid), min_index)
         else
-            for i in 1:4
-                replace!(site -> site .- offsets[i], sites)
-                dac_aux!(sub_grids[i], sites, p, depth)
-                replace!(site -> site .+ offsets[i], sites)
+            Nd = N ÷ 2 + N % 2
+            Md = M ÷ 2 + M % 2
+            offsets = ((0, 0), (Nd, 0), (0, Md), (Nd, Md))
+            tl_grid = @view grid[1:Nd, 1:Md]
+            bl_grid = @view grid[Nd+1:N, 1:Md]
+            tr_grid = @view grid[1:Nd, Md+1:M]
+            br_grid = @view grid[Nd+1:N, Md+1:M]
+            sub_grids = (tl_grid, bl_grid, tr_grid, br_grid)
+            if depth > 0
+                Threads.@threads for i in 1:4
+                    thread_sites = map(site -> site .- offsets[i], sites)
+                    dac_aux!(sub_grids[i], thread_sites, p, depth)
+                end
+            else
+                for i in 1:4
+                    replace!(site -> site .- offsets[i], sites)
+                    dac_aux!(sub_grids[i], sites, p, depth)
+                    replace!(site -> site .+ offsets[i], sites)
+                end
             end
         end
+        return grid
     end
-    return grid
 end
 
 function dacx!(grid, sites, p::Real=2, depth::Int=1)
