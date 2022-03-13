@@ -16,7 +16,7 @@ end
 
 @testset "jfa! working for Int sites" begin
     Random.seed!(42)
-    for p in [1, 2]
+    for p in [1, 2, Inf]
         for i in 1:100
             N, M = rand(1:1000, 2)
             sites = collect(enumerate(get_sites(Int, N, M, rand(1:100))))
@@ -30,7 +30,7 @@ end
 
 @testset "dac! matching results for Int sites" begin
     Random.seed!(42)
-    for p in [1, 2]
+    for p in [1, 2, Inf]
         for i in 1:100
             N, M = rand(1:1000, 2)
             sites = collect(enumerate(get_sites(Int, N, M, rand(1:100))))
@@ -45,7 +45,7 @@ end
 
 @testset "dac! matching results for Float64 sites" begin
     Random.seed!(42)
-    for p in [1, 2]
+    for p in [1, 2, Inf]
         for i in 1:100
             N, M = rand(1:1000, 2)
             sites = collect(enumerate(get_sites(Float64, N, M, rand(1:100))))
@@ -60,7 +60,7 @@ end
 
 @testset "dacx! matching results for Int sites" begin
     Random.seed!(42)
-    for p in [1, 2]
+    for p in [1, 2, Inf]
         for i in 1:100
             N, M = rand(1:1000, 2)
             sites = collect(enumerate(get_sites(Int, N, M, rand(1:100))))
@@ -75,7 +75,7 @@ end
 
 @testset "dacx! working for Float64 sites" begin
     Random.seed!(42)
-    for p in [1, 2]
+    for p in [1, 2, Inf]
         for i in 1:100
             N, M = rand(1:1000, 2)
             sites = collect(enumerate(get_sites(Float64, N, M, rand(1:100))))
@@ -89,7 +89,7 @@ end
 
 @testset "jdac! matching results for Int sites" begin
     Random.seed!(42)
-    for p in [2]
+    for p in [1, 2, Inf]
         for i in 1:100
             N, M = rand(1:1000, 2)
             sites = collect(enumerate(get_sites(Int, N, M, rand(1:100))))
@@ -106,7 +106,7 @@ end
 
 @testset "jdac! matching results for Float64 sites" begin
     Random.seed!(42)
-    for p in [2]
+    for p in [1, 2, Inf]
         for i in 1:100
             N, M = rand(1:1000, 2)
             sites = collect(enumerate(get_sites(Float64, N, M, rand(1:100))))
@@ -123,7 +123,7 @@ end
 
 @testset "jdacx! matching results for Int sites" begin
     Random.seed!(42)
-    for p in [2]
+    for p in [1, 2, Inf]
         for i in 1:100
             N, M = rand(1:1000, 2)
             sites = collect(enumerate(get_sites(Int, N, M, rand(1:100))))
@@ -140,7 +140,7 @@ end
 
 @testset "jdacx! working for Float64 sites" begin
     Random.seed!(42)
-    for p in [2]
+    for p in [1, 2, Inf]
         for i in 1:100
             N, M = rand(1:1000, 2)
             sites = collect(enumerate(get_sites(Float64, N, M, rand(1:100))))
