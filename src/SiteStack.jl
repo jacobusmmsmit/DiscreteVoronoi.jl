@@ -3,19 +3,19 @@
 #######################################################################################
 export SiteStack
 
-mutable struct SiteStack{DT, ST<:Tuple{T1, Tuple{T2, T2}} where {T1, T2}}
+mutable struct SiteStack{DT,ST<:Tuple{T1,Tuple{T2,T2}} where {T1,T2}}
     depth::Int
     dists::Vector{Vector{DT}}
     sites::Vector{Vector{ST}}
-    SiteStack{DT, ST}() where {DT, ST} = new{DT, ST}(0, Vector{Vector{DT}}(), Vector{Vector{ST}}())
+    SiteStack{DT,ST}() where {DT,ST} = new{DT,ST}(0, Vector{Vector{DT}}(), Vector{Vector{ST}}())
 end
 
-SiteStack(::DT, ::ST) where {DT, ST} = new(0, Vector{Vector{DT}}(), Vector{Vector{ST}}())
+SiteStack(::DT, ::ST) where {DT,ST} = new(0, Vector{Vector{DT}}(), Vector{Vector{ST}}())
 
-disttype(::SiteStack{DT, ST}) where {DT, ST} = DT
-sitetype(::SiteStack{DT, ST}) where {DT, ST} = ST
+disttype(::SiteStack{DT,ST}) where {DT,ST} = DT
+sitetype(::SiteStack{DT,ST}) where {DT,ST} = ST
 
-function push_empty!(stack::SiteStack{DT, ST}) where {DT, ST}
+function push_empty!(stack::SiteStack{DT,ST}) where {DT,ST}
     stack.depth += 1
     if stack.depth > length(stack.dists)
         push!(stack.dists, Vector{DT}())
@@ -61,7 +61,7 @@ function pop!(stack::SiteStack)
     stack.depth -= 1
 end
 
-function fill_dists!(center, sites, stack::SiteStack, p::Real=2)
+function fill_dists!(stack::SiteStack, center, sites, p::Real = 2)
     #= push_empty!(stack)
     len = 0
     for site in sites

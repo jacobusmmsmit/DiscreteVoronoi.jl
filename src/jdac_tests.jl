@@ -34,7 +34,7 @@ function jdac_aux1a!(grid, sites, p, depth, stack)
     if all(.>(0), size(grid)) && any(==(0), grid)
         center = size(grid) ./ 2
         max_dist = findmin(site -> distance(center, site[2], p), sites)[1] + norm(size(grid), p) + 1
-        stack_sites = filter(site -> distance(center, site[2], p) <= max_dist, sites) 
+        stack_sites = filter(site -> distance(center, site[2], p) <= max_dist, sites)
         jdac!(grid, stack_sites, jdac_aux1a!, p, depth - 1, stack)
     end
     grid
@@ -55,7 +55,7 @@ function jdac_aux1c!(grid, sites, p, depth, stack)
     if all(.>(0), size(grid)) && any(==(0), grid)
         center = size(grid) ./ 2
         push_empty!(stack)
-        fill_dists!(center, sites, stack, p)
+        fill_dists!(stack, center, sites, p)
         max_dist = findmin(get_dists(stack))[1] + norm(size(grid), p) + 1
         fill_sites!(max_dist, sites, stack)
         jdac!(grid, get_sites(stack), jdac_aux1c!, p, depth - 1, stack)
@@ -101,7 +101,7 @@ function jdac_aux2c!(grid, sites, p, depth, stack)
     if all(.>(0), size(grid)) && any(==(0), grid)
         push_empty!(stack)
         center = size(grid) ./ 2
-        fill_dists!(center, sites, stack, p)
+        fill_dists!(stack, center, sites, p)
         dist, index = findmin(get_dists(stack))
         max_dist = dist + norm(size(grid), p) + 1
         min_site = sites[index][2]
@@ -128,7 +128,7 @@ function jdac_aux3!(grid, sites, p, depth, stack)
     grid
 end
 
-function jdac!(grid, sites, aux!, p::Real=2, depth::Int=1, stack=SiteStack{Float64, eltype(sites)}()) 
+function jdac!(grid, sites, aux!, p::Real = 2, depth::Int = 1, stack = SiteStack{Float64,eltype(sites)}())
     N, M = size(grid)
     if (N == 1 && M == 1) || length(sites) == 1
         min_dist, min_index = findmin(site -> distance(size(grid), site[2], p), sites)
@@ -145,7 +145,7 @@ function jdac!(grid, sites, aux!, p::Real=2, depth::Int=1, stack=SiteStack{Float
         if depth > 0
             Threads.@threads for i in 1:4
                 thread_sites = map(site -> (site[1], site[2] .- offsets[i]), sites)
-                aux!(sub_grids[i], thread_sites, p, depth, SiteStack{Float64, eltype(sites)}())
+                aux!(sub_grids[i], thread_sites, p, depth, SiteStack{Float64,eltype(sites)}())
             end
         else
             for i in 1:4
@@ -158,7 +158,7 @@ function jdac!(grid, sites, aux!, p::Real=2, depth::Int=1, stack=SiteStack{Float
     grid
 end
 
-function jdacx!(grid, sites, aux!, p::Real=2, depth::Int=1, stack=SiteStack{Float64, eltype(sites)}())
+function jdacx!(grid, sites, aux!, p::Real = 2, depth::Int = 1, stack = SiteStack{Float64,eltype(sites)}())
     for (color, point) in sites
         nearest_point = nearest(point)
         if 1 <= nearest_point[1] <= size(grid, 1) && 1 <= nearest_point[2] <= size(grid, 2)
