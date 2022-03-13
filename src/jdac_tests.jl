@@ -1,13 +1,13 @@
 export jdac!, jdacx!, jdac_aux0!, jdac_aux1!, jdac_aux2!, jdac_aux3!, jdac_aux4!, jdac_aux5!, jdac_aux6!, jdac_aux7!
 
-function exact_site_filter(sites, corners)
+function exact_site_filter(sites, corners, p)
     include = fill(false, length(sites))
     for (i, s) in sites
         include[i] = true
         for (j, t) in sites
             nc = 0
             for c in corners
-                if distance(s, c) <= distance(t, c)
+                if distance(s, c, p) <= distance(t, c, p)
                     break
                 end
                 nc += 1
@@ -20,12 +20,12 @@ function exact_site_filter(sites, corners)
     return sites[include]
 end
 
-function jdac_aux0!(grid, sites, depth, stack)
+function jdac_aux0!(grid, sites, p, depth, stack)
     if all(.>(0), size(grid)) && any(==(0), grid)
         N, M = size(grid)
         corners = ((1, 1), (N, 1), (1, M), (N, M))
-        stack_sites = exact_site_filter(sites, corners)
-        jdac!(grid, stack_sites, jdac_aux1!, depth - 1, stack)
+        stack_sites = exact_site_filter(sites, corners, p)
+        jdac!(grid, stack_sites, jdac_aux1!, p, depth - 1, stack)
     end
     grid
 end
