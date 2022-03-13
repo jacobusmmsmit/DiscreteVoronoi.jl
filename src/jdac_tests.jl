@@ -1,23 +1,32 @@
 export jdac!, jdacx!, jdac_aux0!, jdac_aux1a!, jdac_aux1b!, jdac_aux1c!, jdac_aux2a!, jdac_aux2b!, jdac_aux2c!, jdac_aux3!
 
+
+"""
+    exact_site_filter(sites, corners, p)
+Returns {s ∈ 𝒮 : ∄ s' ∈ 𝒮 s.t. ∀ C ∈ {C₁, C₂, C₃, C₄}, d(s', C) < d(s, C)}
+Returns sites such that there does not exist a site such that all corners
+are closer to the site than the candidate.
+"""
 function exact_site_filter(sites, corners, p)
-    include = fill(false, length(sites))
-    for (i, s) in enumerate(sites)
-        include[i] = true
-        for (j, t) in enumerate(sites)
+    new_sites = filter(sites) do i_s
+        s = i_s[2]
+        include = true
+        for (_, t) in sites
             nc = 0
             for c in corners
-                if distance(s[2], c, p) <= distance(t[2], c, p)
+                if distance(s, c, p) <= distance(t, c, p)
                     break
                 end
                 nc += 1
             end
             if nc == 4
-                include[i] = false
+                include = false
             end
         end
+        return include # do-block return
     end
-    return sites[include]
+    # Explicit function return for clarity
+    return new_sites
 end
 
 function jdac_aux0!(grid, sites, p, depth, stack)
