@@ -15,6 +15,7 @@ using BenchmarkTools
 using Statistics
 using Plots
 using Random
+using LinearAlgebra: ⋅
 
 function distance(p, q)
     @fastmath sqrt((p[1] - q[1])^2 + (p[2] - q[2])^2)
@@ -50,7 +51,7 @@ function intersection_two_line_segments((x1, y1), (x2, y2), (x3, y3), (x4, y4))
     return (x1 + t * (x2 - x1), y1 + t * (y2 - y1)), (t, u)
 end
 
-function closest_anchor_in_rectangle(rect, anchor)
+function closest_anchor_from_centre(rect, anchor)
     (T, L), (N, M) = rect
     centre = (T + N / 2, L + M / 2)
     corners = (T, L), (T + N, L), (T + N, L + M), (T, L + M)
@@ -75,18 +76,30 @@ function closest_anchor_in_rectangle(rect, anchor)
 end
 
 
-# A = [(i, i + 2) for i in 1:5]
-# reduce(.+, A)
-# @time reduce(.+, A) ./ length(A)
-# @btime reduce(.+, $A) ./ length($A)
-
-
+"""
+    closest_point(point, segment_start, segment_end)
+Calculate the closest point from a point to a line segment defined by two points
+Arguments   
+===
++ `point`: a euclidean co-ordinate,
++ `segment_start`: the start of the line segment
++ `segment_end`: the end of the line segment
+Result
+===
+An elementwise convex combination of `segment_start` and `segment_end` closest to `point`
+"""
+function closest_point(point, segment_start, segment_end)
+    segment = segment_end .- segment_start
+    t0 = clamp(((point .- segment_start) ⋅ segment) / (segment ⋅ segment), 0, 1)
+    segment_start .+ t0 .* segment
+end
 begin
-    Random.seed!(5)
+    Random.seed!(6)
     scene = plot(xlims = (0, 1), ylims = (0, 1))
     sites = [rand(2) for i in 1:10]
     N, M = 0.5, 0.5
     corners = (0.0, 0.0), (N, 0.0), (N, M), (0.0, M)
+    centre = (corners[1] .+ corners[3]) ./ 2
     rectangle_shape = Shape([0.0, N, N, 0.0], [0.0, 0.0, M, M])
     plot!(rectangle_shape, alpha = 0.5, label = "Rectangle")
     scatter!(first.(sites), last.(sites), label = "Sites", shape = :star)
@@ -95,11 +108,30 @@ begin
     plot!(scene, size = (500, 400), aspect_ratio = 1.0, legend = :outerright)
 end
 
-cl_ia = sites[findmin(site -> distance(inner_anchor, site), sites)[2]]
-cl_ce = sites[findmin(site -> distance(centre, site), sites)[2]]
+function closest_anchor_to_rectangle(rect, anchor)
+    (T, L), (N, M) = rect
+    centre = (T + N / 2, L + M / 2)
+    corners = (T, L), (T + N, L), (T + N, L + M), (T, L + M)
+    # If inside, we are done
+    if (T ≤ anchor[1] ≤ T + N) && (L ≤ anchor[2] ≤ L + M)
+        min_point = anchor
+    else
+        min_dist = Inf
+        min_point = (-Inf, -Inf) # break noisily if it doesn't work 
+        j = 4
+        for i in 1:4
+            curr_point = closest_point(anchor, corners[i], corners[j])
+            curr_dist = distance(curr_point, anchor)
+            if curr_dist < min_dist
+                min_point = curr_point
+                min_dist = curr_dist
+            end
+            j = i
+        end
+    end
+    return min_point
+end
 
-radii_cl_ia = map(corner -> distance(cl_ia, corner), corners)
-radii_cl_ce = map(corner -> distance(cl_ce, corner), corners)
 function circleShape(centre, r)
     x, y = centre
     θ = range(start = 0, stop = 2π, length = 500)
@@ -114,27 +146,28 @@ end
 # scene_ce
 scene_ia = deepcopy(scene)
 begin
+    rect = ((0, 0), (N, M))
+    inner_anchor = closest_anchor_to_rectangle(rect, anchor)
+    cl_ia = sites[findmin(site -> distance(inner_anchor, site), sites)[2]]
+    radii_cl_ia = map(corner -> distance(cl_ia, corner), corners)
     for i in 1:4
         plot!(scene_ia, circleShape(corners[i], radii_cl_ia[i]), seriestype = [:shape,], lw = 0.5, c = :yellow, legend = false, fillalpha = 0.1)
     end
     scatter!(scene_ia, [anchor[1]], [anchor[2]], label = "Anchor")
     plot!(scene_ia, [centre[1], anchor[1]], [centre[2], anchor[2]], label = "", lw = 2.0, lc = :black, ls = :dash)
-    rect = ((0, 0), (N, M))
-    inner_anchor = closest_anchor_in_rectangle(rect, anchor)
+
     plot!(scene_ia, [cl_ia[1], inner_anchor[1]], [cl_ia[2], inner_anchor[2]], label = "", lw = 2.0, lc = :black)
     scatter!(scene_ia, [inner_anchor[1]], [inner_anchor[2]], label = "Inner Anchor")
 end
 
 scene_ce = deepcopy(scene)
 begin
+    cl_ce = sites[findmin(site -> distance(centre, site), sites)[2]]
+    radii_cl_ce = map(corner -> distance(cl_ce, corner), corners)
     for i in 1:4
         plot!(scene_ce, circleShape(corners[i], radii_cl_ce[i]), seriestype = [:shape,], lw = 0.5, c = :red, legend = false, fillalpha = 0.1)
     end
     plot!(scene_ce, [cl_ce[1], centre[1]], [cl_ce[2], centre[2]], label = "", lw = 2.0, lc = :black)
 end
-
-
-
-
 
 plot(scene_ia, scene_ce, size = (800, 500), xlims = (-0.5, 1), ylims = (-0.5, 1))
