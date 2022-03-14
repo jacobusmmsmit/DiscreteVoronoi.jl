@@ -12,7 +12,6 @@ function _norm(xy, p::Real=2)::Float64
     end
 end
 
-
 function distance(x, y, p::Real=2)
     _norm((x[1] - y[1], x[2] - y[2]), p)
 end
