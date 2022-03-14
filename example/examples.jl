@@ -3,27 +3,28 @@ using .DiscreteVoronoi
 using Random
 using BenchmarkTools
 
-function get_sites(N, M, K)
-    idx = [(n, m) for n in 1:N, m in 1:M]
+function rand_sites(::Type{Int}, N, M, K)
+    idx = collect(Iterators.product(1:N, 1:M))
     shuffle!(idx)
     idx[1:K]
 end
 
+
 Random.seed!(42)
 grid = zeros(Int, rand(1:100), rand(1:100))
-sites = get_sites(size(grid)..., 10)
+sites = rand_sites(Int, size(grid)..., 10)
 jfa!(grid, sites)
 @show grid
 
 Random.seed!(42)
 grid = zeros(Int, rand(1:100), rand(1:100))
-sites = get_sites(size(grid)..., 10)
+sites = rand_sites(Int, size(grid)..., 10)
 dac!(grid, sites, 0)
 @show grid
 
 Random.seed!(42)
 grid = zeros(Int, rand(1:100), rand(1:100))
-sites = collect(enumerate(get_sites(size(grid)..., 10)))
+sites = collect(enumerate(rand_sites(Int, size(grid)..., 10)))
 jdac!(grid, sites, jdac_aux1a!, 0)
 @show grid
 
