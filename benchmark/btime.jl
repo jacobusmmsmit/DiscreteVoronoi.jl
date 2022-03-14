@@ -5,7 +5,7 @@ using BenchmarkTools
 
 function rand_sites(::Type{Int}, N, M, K)
     idx = collect(Iterators.product(1:N, 1:M))
-    # shuffle!(idx)
+    shuffle!(idx)
     idx[1:K]
 end
 
