@@ -1,6 +1,6 @@
 using LinearAlgebra: ⋅ # Not sure where to put this
 
-function norm(xy, p::Real = 2)::Float64
+function _norm(xy, p::Real=2)::Float64
     if p == 1
         @fastmath abs(xy[1]) + abs(xy[2])
     elseif p == 2
@@ -12,8 +12,9 @@ function norm(xy, p::Real = 2)::Float64
     end
 end
 
-function distance(x, y, p::Real = 2)
-    norm((x[1] - y[1], x[2] - y[2]), p)
+
+function distance(x, y, p::Real=2)
+    _norm((x[1] - y[1], x[2] - y[2]), p)
 end
 
 function nearest(x)

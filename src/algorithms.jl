@@ -45,7 +45,7 @@ end
         center = (t+N/2, l+M/2) 
         min_dist, min_index = findmin(site -> distance(center, site, p), sites)
         dist, _ = findmin(site -> distance(center, site, p), @view sites[1:end .!= min_index])
-        if dist > min_dist + norm((N, M), p) + 1
+        if dist > min_dist + _norm((N, M), p) + 1
             (@view grid[t:t+N-1, l:l+M-1]) .= convert(eltype(grid), min_index)
         else
             Nd = N ÷ 2 + N % 2
