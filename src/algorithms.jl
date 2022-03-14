@@ -28,15 +28,15 @@ function jfa!(grid, sites, p::Real=2)
     return grid
 end
 
-function dac_aux!(grid, sites, p, depth, rect)
+@inbounds function dac_aux!(grid, sites, p, depth, rect)
     (t, l), (N, M) = rect
-    if all(.>(0), (N, M)) && any(==(0), grid[t:t+N-1, l:l+M-1])
+    if all(>(0), (N, M)) && any(==(0), @view grid[t:t+N-1, l:l+M-1])
         dac!(grid, sites, p, depth - 1, rect)
     end
     return grid
 end
 
-function dac!(grid, sites, p::Real=2, depth::Int=1, rect=((1, 1), size(grid)))
+@inbounds function dac!(grid, sites, p::Real = 2, depth::Int = 1, rect = ((1,1), size(grid)))
     (t, l), (N, M) = rect
     if (N == 1 && M == 1) || length(sites) == 1
         min_dist, min_index = findmin(site -> distance((t+N-1, l+M-1), site, p), sites)

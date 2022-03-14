@@ -16,7 +16,7 @@ function rand_sites(::Type{T}, N, M, K) where {T<:AbstractFloat}
     [(rand(Uniform(0, N)), rand(Uniform(0, M))) for k in 1:K]
 end
 
-#= @testset "jfa! working for Int sites" begin
+@testset "jfa! working for Int sites" begin
     Random.seed!(42)
     for p in [1, 2, Inf]
         for i in 1:REPETITIONS
@@ -28,7 +28,7 @@ end
             @test isa(jfa!(grid2, map(site -> site[2], sites), p), Matrix)
         end
     end
-end =#
+end
 
 @testset "dac! matching results for Int sites" begin
     Random.seed!(42)
@@ -39,7 +39,7 @@ end =#
 
             grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites), p)
             grid2 = zeros(Int, N, M)
-            dac!(grid2, map(site -> site[2], sites), p, 0)
+            dac!(grid2, map(site -> site[2], sites), p)
             @test grid2 == grid1
         end
     end
@@ -87,7 +87,7 @@ end
             @test isa(dacx!(grid2, map(site -> site[2], sites), p), Matrix)
         end
     end
-end
+end 
 
 @testset "jdac! matching results for Int sites" begin
     Random.seed!(42)
@@ -97,6 +97,7 @@ end
             sites = collect(enumerate(rand_sites(Int, N, M, rand(1:100))))
 
             grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites), p)
+            # for aux! in [jdac_aux0!, jdac_aux1a!, jdac_aux1b!, jdac_aux1c!, jdac_aux2a!, jdac_aux2b!, jdac_aux2c!, jdac_aux3!]
             for aux! in [jdac_aux0!, jdac_aux1a!, jdac_aux1b!, jdac_aux1c!, jdac_aux2a!, jdac_aux2b!, jdac_aux2c!, jdac_aux3!]
                 grid2 = zeros(Int, N, M)
                 jdac!(grid2, sites, aux!, p)

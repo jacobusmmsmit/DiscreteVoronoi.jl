@@ -26,35 +26,35 @@ function push_empty!(stack::SiteStack{DT,ST}) where {DT,ST}
     stack.depth
 end
 
-function append_dist!(stack::SiteStack, len, dist)
+@inbounds function append_dist!(stack::SiteStack, len, dist)
     if len <= length(stack.dists[stack.depth])
-        @inbounds stack.dists[stack.depth][len] = dist
+        stack.dists[stack.depth][len] = dist
     else
-        @inbounds push!(stack.dists[stack.depth], dist)
+        push!(stack.dists[stack.depth], dist)
     end
 end
-function resize_dists!(stack::SiteStack, len)
-    @inbounds resize!(stack.dists[stack.depth], len)
+@inbounds function resize_dists!(stack::SiteStack, len)
+    resize!(stack.dists[stack.depth], len)
 end
 
-function get_dists(stack::SiteStack)
-    @inbounds stack.dists[stack.depth]
+@inbounds function get_dists(stack::SiteStack)
+    stack.dists[stack.depth]
 end
 
-function append_site!(stack::SiteStack, len, site)
+@inbounds function append_site!(stack::SiteStack, len, site)
     if len <= length(stack.sites[stack.depth])
-        @inbounds stack.sites[stack.depth][len] = site
+        stack.sites[stack.depth][len] = site
     else
-        @inbounds push!(stack.sites[stack.depth], site)
+        push!(stack.sites[stack.depth], site)
     end
 end
 
-function resize_sites!(stack::SiteStack, len)
-    @inbounds resize!(stack.sites[stack.depth], len)
+@inbounds function resize_sites!(stack::SiteStack, len)
+    resize!(stack.sites[stack.depth], len)
 end
 
-function get_sites(stack::SiteStack)
-    @inbounds stack.sites[stack.depth]
+@inbounds function get_sites(stack::SiteStack)
+    stack.sites[stack.depth]
 end
 
 function pop!(stack::SiteStack)
