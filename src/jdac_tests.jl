@@ -1,4 +1,4 @@
-export jdac!, jdacx!, jdac_aux0!, jdac_aux1a!, jdac_aux1b!, jdac_aux1c!, jdac_aux2a!, jdac_aux2b!, jdac_aux2c!, jdac_aux3a!, jdac_aux3b!, jdac_aux3c!
+export jdac!, jdacx!, jdac_aux0!, jdac_aux1a!, jdac_aux1b!, jdac_aux1c!, jdac_aux2a!, jdac_aux2b!, jdac_aux2c!, jdac_aux3a!, jdac_aux3b!, jdac_aux3c!, jdac_aux4a!
 
 
 """
@@ -162,6 +162,19 @@ end
         fill_sites!(stack, min_site, corners, sites, p)
         jdac!(grid, get_sites(stack), jdac_aux3c!, p, depth - 1, rect, stack)
         pop!(stack)
+    end
+    grid
+end
+
+@inbounds function jdac_aux4a!(grid, sites, p, depth, rect, stack)
+    (t, l), (N, M) = rect
+    if all(>(0), (N, M)) && any(==(0), @view grid[t:t+N-1, l:l+M-1])
+        mean = reduce(.+, site[2] for site in sites) ./ length(sites)
+        corners = (t, l), (t+N-1, l), (t, l+M-1), (t+N-1, l+M-1)
+        anchor = corners[findmin(corner -> distance(mean, corner, p), corners)[2]]
+        min_site = sites[findmin(site -> distance(anchor, site[2], p), sites)[2]][2]
+        stack_sites = filter(site -> any(corner -> distance(corner, site[2], p) <= distance(corner, min_site, p), corners), sites)
+        jdac!(grid, stack_sites, jdac_aux4a!, p, depth - 1, rect, stack)
     end
     grid
 end

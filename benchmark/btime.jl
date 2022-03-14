@@ -27,7 +27,7 @@ for n in [10, 100, 1000]
 
         println("jdac")
         # Not testing jdac_aux0! due to poor scaling in s (number of sites)
-        for aux! in [jdac_aux1a!, jdac_aux1b!, jdac_aux1c!, jdac_aux2a!, jdac_aux2b!, jdac_aux2c!, jdac_aux3a!, jdac_aux3b!, jdac_aux3c!]
+        for aux! in [jdac_aux1a!, jdac_aux1b!, jdac_aux1c!, jdac_aux2a!, jdac_aux2b!, jdac_aux2c!, jdac_aux3a!, jdac_aux3b!, jdac_aux3c!, jdac_aux4a!]
             @show aux!
             @btime jdacx!(grid, sites, $aux!) setup = (
                 Random.seed!(42);
