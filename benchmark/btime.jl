@@ -10,8 +10,7 @@ function rand_sites(::Type{Int}, N, M, K)
 end
 
 
-# for n in [10, 100, 1000]
-for n in [5000]
+for n in [10, 100, 1000]
     for s in [isqrt(n), n, n * isqrt(n), n * n]
         @show n, s
         println("jfa")
