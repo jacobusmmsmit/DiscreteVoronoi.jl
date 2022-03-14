@@ -64,7 +64,7 @@ function jdac_aux1c!(grid, sites, p, depth, stack)
         push_empty!(stack)
         fill_dists!(stack, center, sites, p)
         max_dist = findmin(get_dists(stack))[1] + norm(size(grid), p) + 1
-        fill_sites!(max_dist, sites, stack)
+        fill_sites!(stack, max_dist, sites)
         jdac!(grid, get_sites(stack), jdac_aux1c!, p, depth - 1, stack)
         pop!(stack)
     end
@@ -116,7 +116,7 @@ function jdac_aux2c!(grid, sites, p, depth, stack)
         corners = ((1, 1), (N, 1), (1, M), (N, M))
         dist = maximum(corner -> distance(corner, min_site, p), corners) + norm(center, p) + 1
         max_dist = min(max_dist, dist)
-        fill_sites!(max_dist, sites, stack)
+        fill_sites!(stack, max_dist, sites)
         jdac!(grid, get_sites(stack), jdac_aux2c!, p, depth - 1, stack)
         pop!(stack)
     end

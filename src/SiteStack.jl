@@ -74,7 +74,7 @@ function fill_dists!(stack::SiteStack, center, sites, p::Real = 2)
     # get_dists(stack)
 end
 
-function fill_sites!(max_dist, sites, stack::SiteStack)
+function fill_sites!(stack::SiteStack, max_dist, sites)
     #= len = 0
     for (dist, site) in zip(get_dists(stack), sites)
         if dist <= max_dist
