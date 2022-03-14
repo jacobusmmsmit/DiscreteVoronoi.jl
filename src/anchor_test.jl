@@ -16,6 +16,7 @@ using Statistics
 using Plots
 using Random
 using LinearAlgebra: ⋅
+using Distributions
 
 function distance(p, q)
     @fastmath sqrt((p[1] - q[1])^2 + (p[2] - q[2])^2)
@@ -94,15 +95,19 @@ function closest_point(point, segment_start, segment_end)
     segment_start .+ t0 .* segment
 end
 begin
-    Random.seed!(6)
+    # i = 8
+    i += 1
+    @show i
+    Random.seed!(i)
+
     scene = plot(xlims = (0, 1), ylims = (0, 1))
-    sites = [rand(2) for i in 1:10]
+    sites = [(rand(Normal(0.5, 1)), rand(Exponential(1))) for i in 1:100]
     N, M = 0.5, 0.5
     corners = (0.0, 0.0), (N, 0.0), (N, M), (0.0, M)
     centre = (corners[1] .+ corners[3]) ./ 2
     rectangle_shape = Shape([0.0, N, N, 0.0], [0.0, 0.0, M, M])
     plot!(rectangle_shape, alpha = 0.5, label = "Rectangle")
-    scatter!(first.(sites), last.(sites), label = "Sites", shape = :star)
+    scatter!(first.(sites), last.(sites), label = "Sites", shape = :star, mlw = 0.5)
     anchor = reduce(.+, sites) ./ length(sites)
     scatter!([centre[1]], [centre[2]], label = "Centre")
     plot!(scene, size = (500, 400), aspect_ratio = 1.0, legend = :outerright)
@@ -110,7 +115,6 @@ end
 
 function closest_anchor_to_rectangle(rect, anchor)
     (T, L), (N, M) = rect
-    centre = (T + N / 2, L + M / 2)
     corners = (T, L), (T + N, L), (T + N, L + M), (T, L + M)
     # If inside, we are done
     if (T ≤ anchor[1] ≤ T + N) && (L ≤ anchor[2] ≤ L + M)
@@ -138,36 +142,50 @@ function circleShape(centre, r)
     x .+ r * sin.(θ), y .+ r * cos.(θ)
 end
 
-# scene_ce = scene
-# for i in 1:4    
-#     circ = circleShape(corners[i], radii_cl_ce[i])
-#     plot!(scene_ce, circ, fillalpha = 0.2)
-# end
-# scene_ce
 scene_ia = deepcopy(scene)
 begin
     rect = ((0, 0), (N, M))
     inner_anchor = closest_anchor_to_rectangle(rect, anchor)
     cl_ia = sites[findmin(site -> distance(inner_anchor, site), sites)[2]]
     radii_cl_ia = map(corner -> distance(cl_ia, corner), corners)
-    for i in 1:4
-        plot!(scene_ia, circleShape(corners[i], radii_cl_ia[i]), seriestype = [:shape,], lw = 0.5, c = :yellow, legend = false, fillalpha = 0.1)
+    for i in 1:3
+        plot!(scene_ia, circleShape(corners[i], radii_cl_ia[i]), seriestype = [:shape,], lw = 0.5, c = :green, fillalpha = 0.1, label = "")
     end
+    plot!(scene_ia, circleShape(corners[4], radii_cl_ia[4]), seriestype = [:shape,], lw = 0.5, c = :green, fillalpha = 0.1, label = "Inclusion Area")
     scatter!(scene_ia, [anchor[1]], [anchor[2]], label = "Anchor")
-    plot!(scene_ia, [centre[1], anchor[1]], [centre[2], anchor[2]], label = "", lw = 2.0, lc = :black, ls = :dash)
+    plot!(scene_ia, [inner_anchor[1], anchor[1]], [inner_anchor[2], anchor[2]], label = "", lw = 2.0, lc = :black, ls = :dash)
 
     plot!(scene_ia, [cl_ia[1], inner_anchor[1]], [cl_ia[2], inner_anchor[2]], label = "", lw = 2.0, lc = :black)
     scatter!(scene_ia, [inner_anchor[1]], [inner_anchor[2]], label = "Inner Anchor")
+end
+
+scene_fc = deepcopy(scene)
+begin
+    rect = ((0, 0), (N, M))
+    inner_anchor_fc = closest_anchor_from_centre(rect, anchor)
+    cl_fc = sites[findmin(site -> distance(inner_anchor_fc, site), sites)[2]]
+    radii_cl_fc = map(corner -> distance(cl_fc, corner), corners)
+    for i in 1:3
+        plot!(scene_fc, circleShape(corners[i], radii_cl_fc[i]), seriestype = [:shape,], lw = 0.5, c = :yellow, fillalpha = 0.1, label = "")
+    end
+    plot!(scene_fc, circleShape(corners[4], radii_cl_fc[4]), seriestype = [:shape,], lw = 0.5, c = :yellow, fillalpha = 0.1, label = "Inclusion Area")
+    scatter!(scene_fc, [anchor[1]], [anchor[2]], label = "Anchor")
+    plot!(scene_fc, [centre[1], anchor[1]], [centre[2], anchor[2]], label = "", lw = 2.0, lc = :black, ls = :dash)
+
+    plot!(scene_fc, [cl_fc[1], inner_anchor_fc[1]], [cl_fc[2], inner_anchor_fc[2]], label = "", lw = 2.0, lc = :black)
+    scatter!(scene_fc, [inner_anchor_fc[1]], [inner_anchor_fc[2]], label = "Inner Anchor")
 end
 
 scene_ce = deepcopy(scene)
 begin
     cl_ce = sites[findmin(site -> distance(centre, site), sites)[2]]
     radii_cl_ce = map(corner -> distance(cl_ce, corner), corners)
-    for i in 1:4
-        plot!(scene_ce, circleShape(corners[i], radii_cl_ce[i]), seriestype = [:shape,], lw = 0.5, c = :red, legend = false, fillalpha = 0.1)
+    for i in 1:3
+        plot!(scene_ce, circleShape(corners[i], radii_cl_ce[i]), seriestype = [:shape,], lw = 0.5, c = :red, fillalpha = 0.1, label = "")
     end
+    plot!(scene_ce, circleShape(corners[4], radii_cl_ce[4]), seriestype = [:shape,], lw = 0.5, c = :red, fillalpha = 0.1, label = "Inclusion Area")
     plot!(scene_ce, [cl_ce[1], centre[1]], [cl_ce[2], centre[2]], label = "", lw = 2.0, lc = :black)
 end
 
-plot(scene_ia, scene_ce, size = (800, 500), xlims = (-0.5, 1), ylims = (-0.5, 1))
+scene_fc
+plot(scene_ia, scene_ce, scene_fc, layout = (3, 1), size = (800, 1000), xlims = (-0.5, 1), ylims = (-0.5, 1))
