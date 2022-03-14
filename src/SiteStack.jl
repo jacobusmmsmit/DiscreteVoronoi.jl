@@ -61,16 +61,16 @@ function pop!(stack::SiteStack)
     stack.depth -= 1
 end
 
-function fill_dists!(stack::SiteStack, center, sites, p::Real = 2)
+function fill_dists!(stack::SiteStack, reference, sites, p::Real = 2)
     #= push_empty!(stack)
     len = 0
     for site in sites
         len += 1
-        append_dist!(stack, len, distance(center, site[2], p))
+        append_dist!(stack, len, distance(reference, site[2], p))
     end
     resize_dists!(stack, len) =#
     resize_dists!(stack, length(sites))
-    copyto!(get_dists(stack), distance(center, site[2], p) for site in sites)
+    copyto!(get_dists(stack), distance(reference, site[2], p) for site in sites)
     # get_dists(stack)
 end
 
@@ -87,5 +87,22 @@ function fill_sites!(stack::SiteStack, max_dist, sites)
     resize_sites!(stack, len)
     copyto!(get_sites(stack),
         site for (dist, site) in zip(get_dists(stack), sites) if dist < max_dist)
+    # get_sites(stack)
+end
+
+function fill_sites!(stack::SiteStack, min_site, corners, sites, p::Real = 2)
+    dists = get_dists(stack)
+    len = 0
+    for site in sites
+        if any(corner -> distance(corner[2], site[2], p) <= dists[corner[1]], enumerate(corners))
+            len += 1
+            append_site!(stack, len, site)
+        end
+    end
+    resize_sites!(stack, len) 
+    #= len = sum(1 for site in sites if any(corner -> distance(corner[2], site[2], p) <= dists[corner[1]], enumerate(corners)))
+    resize_sites!(stack, len)
+    copyto!(get_sites(stack),
+        site for site in sites if any(corner -> distance(corner[2], site[2], p) <= dists[corner[1]], enumerate(corners))) =#
     # get_sites(stack)
 end

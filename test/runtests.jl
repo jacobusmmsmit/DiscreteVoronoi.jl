@@ -97,8 +97,7 @@ end
             sites = collect(enumerate(rand_sites(Int, N, M, rand(1:100))))
 
             grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites), p)
-            # for aux! in [jdac_aux0!, jdac_aux1a!, jdac_aux1b!, jdac_aux1c!, jdac_aux2a!, jdac_aux2b!, jdac_aux2c!, jdac_aux3!]
-            for aux! in [jdac_aux0!, jdac_aux1a!, jdac_aux1b!, jdac_aux1c!, jdac_aux2a!, jdac_aux2b!, jdac_aux2c!, jdac_aux3!]
+            for aux! in [jdac_aux0!, jdac_aux1a!, jdac_aux1b!, jdac_aux1c!, jdac_aux2a!, jdac_aux2b!, jdac_aux2c!, jdac_aux3a!, jdac_aux3c!]
                 grid2 = zeros(Int, N, M)
                 jdac!(grid2, sites, aux!, p)
                 @test grid2 == grid1
@@ -115,7 +114,7 @@ end
             sites = collect(enumerate(rand_sites(Float64, N, M, rand(1:100))))
 
             grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites), p)
-            for aux! in [jdac_aux0!, jdac_aux1a!, jdac_aux1b!, jdac_aux1c!, jdac_aux2a!, jdac_aux2b!, jdac_aux2c!, jdac_aux3!]
+            for aux! in [jdac_aux0!, jdac_aux1a!, jdac_aux1b!, jdac_aux1c!, jdac_aux2a!, jdac_aux2b!, jdac_aux2c!, jdac_aux3a!, jdac_aux3c!]
                 grid2 = zeros(Int, N, M)
                 jdac!(grid2, sites, aux!, p)
                 @test grid2 == grid1
@@ -132,7 +131,7 @@ end
             sites = collect(enumerate(rand_sites(Int, N, M, rand(1:100))))
 
             grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites), p)
-            for aux! in [jdac_aux0!, jdac_aux1a!, jdac_aux1b!, jdac_aux1c!, jdac_aux2a!, jdac_aux2b!, jdac_aux2c!, jdac_aux3!]
+            for aux! in [jdac_aux0!, jdac_aux1a!, jdac_aux1b!, jdac_aux1c!, jdac_aux2a!, jdac_aux2b!, jdac_aux2c!, jdac_aux3a!, jdac_aux3c!]
                 grid2 = zeros(Int, N, M)
                 jdacx!(grid2, sites, aux!, p)
                 @test grid2 == grid1
@@ -149,10 +148,10 @@ end
             sites = collect(enumerate(rand_sites(Float64, N, M, rand(1:100))))
 
             grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites), p)
-            for aux! in [jdac_aux0!, jdac_aux1a!, jdac_aux1b!, jdac_aux1c!, jdac_aux2a!, jdac_aux2b!, jdac_aux2c!, jdac_aux3!]
+            for aux! in [jdac_aux0!, jdac_aux1a!, jdac_aux1b!, jdac_aux1c!, jdac_aux2a!, jdac_aux2b!, jdac_aux2c!, jdac_aux3a!, jdac_aux3c!]
                 grid2 = zeros(Int, N, M)
                 @test isa(jdacx!(grid2, sites, aux!), Matrix)
             end
         end
     end
-end
+end 
