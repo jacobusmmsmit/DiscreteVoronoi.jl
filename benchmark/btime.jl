@@ -11,7 +11,7 @@ function rand_sites(::Type{Int}, N, M, K)
 end
 
 function rand_sites(::Type{T}, N, M, K) where {T<:AbstractFloat}
-    [rand(MvNormal((N / 4, 3 * M / 4), (N / 8,M / 8))) for k in 1:K]
+    [Tuple(rand(MvNormal([N / 4, 3 * M / 4], [N / 8, M / 8]))) for k in 1:K]
 end
 
 #= for n in [100, 1000]
@@ -27,7 +27,7 @@ end
         @btime dac!(grid, sites) setup=(
             Random.seed!(42);
             grid = zeros(Int32, $n, $n);
-            sites = rand_sites(size(grid)..., $s)) =#
+            sites = rand_sites(Int, size(grid)..., $s)) =#
 
         println("jdac")
         # Not testing jdac_aux0! due to poor scaling in s (number of sites)
@@ -53,7 +53,7 @@ for n in 1000:1000:5000
         @btime dac!(grid, sites) setup=(
             Random.seed!(42);
             grid = zeros(Int32, $n, $n);
-            sites = rand_sites(size(grid)..., $s)) =#
+            sites = rand_sites(Float64, size(grid)..., $s)) =#
 
         println("jdac")
         # Not testing jdac_aux0! due to poor scaling in s (number of sites)
@@ -68,7 +68,7 @@ for n in 1000:1000:5000
             @btime jdacx!(grid, sites, $aux!) setup = (
                 Random.seed!(42);
                 grid = zeros(Int, $n, $n);
-                sites = collect(enumerate(rand_sites(Int, size(grid)..., $s))))
+                sites = collect(enumerate(rand_sites(Float64, size(grid)..., $s))))
         end
     end
 end
