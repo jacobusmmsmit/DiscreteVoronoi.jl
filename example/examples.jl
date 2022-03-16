@@ -19,16 +19,16 @@ jfa!(grid, sites)
 Random.seed!(42)
 grid = zeros(Int, rand(1:100), rand(1:100))
 sites = rand_sites(Int, size(grid)..., 10)
-dac!(grid, sites, 0)
+dac!(grid, sites)
 @show grid
 
 Random.seed!(42)
 grid = zeros(Int, rand(1:100), rand(1:100))
 sites = collect(enumerate(rand_sites(Int, size(grid)..., 10)))
-jdac!(grid, sites, jdac_aux1a!, 0)
+jdac!(grid, sites, jdac_aux1a!)
 @show grid
 
-L0(A, B) = sum(A .!= B)
+#= L0(A, B) = sum(A .!= B)
 
 begin
     # time_naive = Float64[]
@@ -91,5 +91,5 @@ begin
 
     # plot(times_plot, times_plot_fast, size = (1000, 500), margin = 3mm)
     plot(times_plot, times_plot_fast, size = (1000, 500))
-end
+end =#
 

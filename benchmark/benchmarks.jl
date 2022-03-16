@@ -9,7 +9,6 @@ function rand_sites(::Type{Int}, N, M, K)
     idx[1:K]
 end
 
-
 const SUITE = BenchmarkGroup()
 
 for n in [10, 100, 1000]

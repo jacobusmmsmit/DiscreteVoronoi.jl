@@ -1,6 +1,6 @@
-using LinearAlgebra: ⋅ # Not sure where to put this
+using LinearAlgebra # Not sure where to put this
 
-function _norm(xy, p::Real=2)::Float64
+function _norm(xy, p::Real = 2)::Float64
     if p == 1
         @fastmath abs(xy[1]) + abs(xy[2])
     elseif p == 2
@@ -12,18 +12,48 @@ function _norm(xy, p::Real=2)::Float64
     end
 end
 
-function distance(x, y, p::Real=2)
+function _dot(x, y)
+    sum(x .* y)
+end
+
+function distance(x, y, p::Real = 2)
     _norm((x[1] - y[1], x[2] - y[2]), p)
 end
 
-function nearest(x)
-    (round(Int, x[1]), round(Int, x[2]))
+function segment(s1, s2, t)
+    s1 .+ t .* (s2 .- s1)
+end
+function closest(s1, s2, x)
+    s = s2 .- s1
+    segment(s1, s2, clamp(_dot(x .- s1, s) / _dot(s, s), 0.0, 1.0))
+end
+function closest(rect, mean)
+    (t, l), (N, M) = rect
+    if t <= mean[1] <= t + N - 1 && l <= mean[2] <= l + M - 1
+        mean
+    else
+        corners = (t, l), (t + N - 1, l), (t + N - 1, l + M - 1), (t, l + M - 1)
+        segments = (1, 2), (2, 3), (3, 4), (4, 1)
+        # _, index = findmin(segment -> distance(closest(corners[segment[1]], corners[segment[2]], mean), mean, 2), segments)
+        # closest(corners[segments[index][1]], corners[segments[index][2]], mean)
+        anchor = (Inf, Inf)
+        anchor_dist = Inf
+        for segment in segments
+            point = closest(corners[segment[1]], corners[segment[2]], mean)
+            point_dist = distance(point, mean, 2)
+            if point_dist < anchor_dist
+                anchor = point
+                anchor_dist = point_dist
+            end
+        end
+        anchor
+    end
 end
 
 """
     closest_point(point, segment_start, segment_end)
 Calculate the closest point from a point to a line segment defined by two points
-Arguments   
+Arguments
 ===
 + `point`: a euclidean co-ordinate,
 + `segment_start`: the start of the line segment
@@ -40,13 +70,13 @@ end
 
 function closest_anchor_to_rectangle(rect, anchor)
     (T, L), (N, M) = rect
-    corners = (T, L), (T + N, L), (T + N, L + M), (T, L + M)
+    corners = (T, L), (T + N - 1, L), (T + N - 1, L + M - 1), (T, L + M - 1)
     # If inside, we are done
-    if (T ≤ anchor[1] ≤ T + N) && (L ≤ anchor[2] ≤ L + M)
+    if (T ≤ anchor[1] ≤ T + N - 1) && (L ≤ anchor[2] ≤ L + M - 1)
         min_point = anchor
     else
         min_dist = Inf
-        min_point = (-Inf, -Inf) # break noisily if it doesn't work 
+        min_point = (-Inf, -Inf) # break noisily if it doesn't work
         j = 4
         for i in 1:4
             curr_point = closest_point(anchor, corners[i], corners[j])
@@ -59,4 +89,8 @@ function closest_anchor_to_rectangle(rect, anchor)
         end
     end
     return min_point
+end
+
+function round_tuple(x)
+    (round(Int, x[1]), round(Int, x[2]))
 end

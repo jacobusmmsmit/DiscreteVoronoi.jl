@@ -71,9 +71,9 @@ end
 
 function dacx!(grid, sites, p::Real=2, depth::Int=1)
     for (color, point) in enumerate(sites)
-        nearest_point = nearest(point)
-        if 1 <= nearest_point[1] <= size(grid, 1) && 1 <= nearest_point[2] <= size(grid, 2)
-            grid[nearest_point...] = convert(eltype(grid), color)
+        closest_point = round_tuple(point)
+        if 1 <= closest_point[1] <= size(grid, 1) && 1 <= closest_point[2] <= size(grid, 2)
+            grid[closest_point...] = convert(eltype(grid), color)
         end
     end
     dac!(grid, sites, p, depth)
