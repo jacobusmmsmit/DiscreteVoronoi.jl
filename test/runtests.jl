@@ -25,10 +25,25 @@ end
 
             grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites), p)
             grid2 = zeros(Int, N, M)
-            @test isa(jfa!(grid2, map(site -> site[2], sites), p), Matrix)
+            @test !any(==(0), jfa!(grid2, map(site -> site[2], sites), p)) 
         end
     end
 end
+
+@testset "jfa_par! working for Int sites" begin
+    Random.seed!(42)
+    for p in [1, 2, Inf]
+        for i in 1:REPETITIONS
+            N, M = rand(1:1000, 2)
+            sites = collect(enumerate(rand_sites(Int, N, M, rand(1:100))))
+
+            grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites), p)
+            grid2 = zeros(Int, N, M)
+            @test !any(==(0), jfa_par!(grid2, map(site -> site[2], sites), p))
+        end
+    end
+end
+
 
 @testset "dac! matching results for Int sites" begin
     Random.seed!(42)
@@ -84,7 +99,7 @@ end
 
             grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites), p)
             grid2 = zeros(Int, N, M)
-            @test isa(dacx!(grid2, map(site -> site[2], sites), p), Matrix)
+            @test !any(==(0), dacx!(grid2, map(site -> site[2], sites), p))
         end
     end
 end
@@ -170,7 +185,7 @@ end
                          jdac_aux4a!, jdac_aux4c!, 
                          jdac_aux5a!, jdac_aux5c!]
                 grid2 = zeros(Int, N, M)
-                @test isa(jdacx!(grid2, sites, aux!), Matrix)
+                @test !any(==(0), jdacx!(grid2, sites, aux!, p))
             end
         end
     end
