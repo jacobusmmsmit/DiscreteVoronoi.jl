@@ -1,6 +1,6 @@
-using OffsetArrays
+using Polyester
 
-export naive_voronoi, jfa!, dac_aux!, dac!, dacx!
+export naive_voronoi, jfa!, jfa_par!, dac_aux!, dac!, dacx!
 
 naive_voronoi(grid, sites, p::Real=2) = map(cell -> findmin(site -> distance(cell, site, p), sites)[2], grid)
 
@@ -24,6 +24,32 @@ function jfa!(grid, sites, p::Real=2)
                 end
             end
         end
+    end
+    return grid
+end
+
+function jfa_par!(grid, sites, p::Real=2)
+    for (color, (x, y)) in enumerate(sites)
+        grid[x, y] = convert(eltype(grid), color)
+    end
+    gridp = copy(grid)
+    k = max(size(grid)...)
+    while k > 1
+        k = k ÷ 2 + k % 2
+        @inbounds @batch for y in 1:size(grid, 2), x in 1:size(grid, 1)
+            for j in (-k, 0, k), i in (-k, 0, k)
+                checkbounds(Bool, grid, x + i, y + j) || continue
+                colorq = grid[x + i, y + j]
+                colorq !== 0 || continue
+                colorp = grid[x, y]
+                if colorp === 0
+                    gridp[x, y] = colorq
+                elseif distance(sites[colorp], (x, y), p) > distance(sites[colorq], (x, y), p)
+                    gridp[x, y] = colorq
+                end
+            end
+        end
+        grid .= gridp
     end
     return grid
 end
@@ -55,7 +81,7 @@ end
             tr_rect = (t, l+Md), (Nd, M-Md)
             br_rect = (t+Nd, l+Md), (N-Nd, M-Md)
             sub_rects = (tl_rect, bl_rect, tr_rect, br_rect)
-            if depth > 0
+            #= if depth > 0
                 Threads.@threads for i in 1:4
                     dac_aux!(grid, sites, p, depth, sub_rects[i])
                 end
@@ -63,6 +89,9 @@ end
                 for i in 1:4
                     dac_aux!(grid, sites, p, depth, sub_rects[i])
                 end
+            end =#
+            @batch for i in 1:4
+                dac_aux!(grid, sites, p, depth, sub_rects[i])
             end
         end
         return grid

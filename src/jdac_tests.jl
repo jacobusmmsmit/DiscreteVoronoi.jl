@@ -37,7 +37,7 @@ end
     if all(>(0), (N, M)) && any(==(0), @view grid[t:t+N-1, l:l+M-1])
         corners = (t, l), (t + N - 1, l), (t, l + M - 1), (t + N - 1, l + M - 1)
         stack_sites = exact_site_filter(sites, corners, p)
-        jdac!(grid, stack_sites, jdac_aux1a!, p, depth - 1, rect, stack)
+        jdac!(grid, stack_sites, jdac_aux0!, p, depth - 1, rect, stack)
     end
     grid
 end
