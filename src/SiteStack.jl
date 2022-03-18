@@ -7,10 +7,12 @@ mutable struct SiteStack{DT,ST<:Tuple{T1,Tuple{T2,T2}} where {T1,T2}}
     depth::Int
     dists::Vector{Vector{DT}}
     sites::Vector{Vector{ST}}
-    SiteStack{DT,ST}() where {DT,ST} = new{DT,ST}(0, Vector{Vector{DT}}(), Vector{Vector{ST}}())
+    mean_sites::Vector{Tuple{Float64, Float64}}
+    function SiteStack{DT,ST}(sites) where {DT,ST} 
+        mean_site = reduce(.+, site[2] for site in sites) ./ length(sites)
+        new{DT,ST}(1, [[]], [sites], [mean_site])
+    end
 end
-
-SiteStack(::DT, ::ST) where {DT,ST} = new(0, Vector{Vector{DT}}(), Vector{Vector{ST}}())
 
 disttype(::SiteStack{DT,ST}) where {DT,ST} = DT
 sitetype(::SiteStack{DT,ST}) where {DT,ST} = ST
@@ -22,6 +24,9 @@ function push_empty!(stack::SiteStack{DT,ST}) where {DT,ST}
     end
     if stack.depth > length(stack.sites)
         push!(stack.sites, Vector{ST}())
+    end
+    if stack.depth > length(stack.mean_sites)
+        push!(stack.mean_sites, (NaN, NaN))
     end
     stack.depth
 end
@@ -57,6 +62,14 @@ end
     stack.sites[stack.depth]
 end
 
+@inbounds function set_mean_site!(stack::SiteStack, mean_site)
+    stack.mean_sites[stack.depth] = mean_site
+end
+
+@inbounds function get_mean_site(stack::SiteStack)
+    stack.mean_sites[stack.depth]
+end
+
 function pop!(stack::SiteStack)
     stack.depth -= 1
 end
@@ -87,10 +100,11 @@ function fill_sites!(stack::SiteStack, max_dist, sites)
     resize_sites!(stack, len)
     copyto!(get_sites(stack),
         site for (dist, site) in zip(get_dists(stack), sites) if dist < max_dist)
+    # set_mean_site!(stack, reduce(.+, site[2] for site in get_sites(stack)) ./ length(get_sites(stack)))
     # get_sites(stack)
 end
 
-function fill_sites!(stack::SiteStack, min_site, corners, sites, p::Real = 2)
+function fill_sites!(stack::SiteStack, corners, sites, p)
     dists = get_dists(stack)
     len = 0
     for site in sites
@@ -100,6 +114,7 @@ function fill_sites!(stack::SiteStack, min_site, corners, sites, p::Real = 2)
         end
     end
     resize_sites!(stack, len) 
+    set_mean_site!(stack, reduce(.+, site[2] for site in get_sites(stack)) ./ length(get_sites(stack)))
     #= len = sum(1 for site in sites if any(corner -> distance(corner[2], site[2], p) <= dists[corner[1]], enumerate(corners)))
     resize_sites!(stack, len)
     copyto!(get_sites(stack),
