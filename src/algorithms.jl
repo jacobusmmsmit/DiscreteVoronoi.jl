@@ -64,14 +64,14 @@ end
 
 @inbounds function dac!(grid, sites, p::Real = 2, depth::Int = 1, rect = ((1,1), size(grid)))
     (t, l), (N, M) = rect
+    center = (t+(N-1)/2, l+(M-1)/2) 
     if (N == 1 && M == 1) || length(sites) == 1
-        min_dist, min_index = findmin(site -> distance((t+N-1, l+M-1), site, p), sites)
+        _, min_index = findmin(site -> distance(center, site, p), sites)
         (@view grid[t:t+N-1, l:l+M-1]) .= convert(eltype(grid), min_index)
     else
-        center = (t+N/2, l+M/2) 
         min_dist, min_index = findmin(site -> distance(center, site, p), sites)
         dist, _ = findmin(site -> distance(center, site, p), @view sites[1:end .!= min_index])
-        if dist > min_dist + _norm((N, M), p) + 1
+        if dist > min_dist + distance((1, 1), (N, M), p) + 1
             (@view grid[t:t+N-1, l:l+M-1]) .= convert(eltype(grid), min_index)
         else
             Nd = N ÷ 2 + N % 2
