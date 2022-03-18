@@ -81,7 +81,7 @@ end
             tr_rect = (t, l+Md), (Nd, M-Md)
             br_rect = (t+Nd, l+Md), (N-Nd, M-Md)
             sub_rects = (tl_rect, bl_rect, tr_rect, br_rect)
-            #= if depth > 0
+            if depth > 0
                 Threads.@threads for i in 1:4
                     dac_aux!(grid, sites, p, depth, sub_rects[i])
                 end
@@ -89,9 +89,6 @@ end
                 for i in 1:4
                     dac_aux!(grid, sites, p, depth, sub_rects[i])
                 end
-            end =#
-            @batch for i in 1:4
-                dac_aux!(grid, sites, p, depth, sub_rects[i])
             end
         end
         return grid
