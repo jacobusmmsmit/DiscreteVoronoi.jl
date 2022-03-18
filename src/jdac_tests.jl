@@ -164,7 +164,7 @@ end
         min_site = sites[findmin(site -> distance(center, site[2], p), sites)[2]][2]
         corners = (t, l), (t + N - 1, l), (t + N - 1, l + M - 1), (t, l + M - 1)
         fill_dists!(stack, min_site, enumerate(corners), p)
-        fill_sites!(stack, min_site, corners, sites, p)
+        fill_sites!(stack, corners, sites, p)
         jdac!(grid, get_sites(stack), jdac_aux3c!, p, depth - 1, rect, stack)
         pop!(stack)
     end
@@ -174,8 +174,8 @@ end
 @inbounds function jdac_aux4a!(grid, sites, p, depth, rect, stack)
     (t, l), (N, M) = rect
     if all(>(0), (N, M)) && any(==(0), @view grid[t:t+N-1, l:l+M-1])
-        mean = reduce(.+, site[2] for site in sites) ./ length(sites)
-        anchor = closest(rect, mean)
+        mean_site = reduce(.+, site[2] for site in sites) ./ length(sites)
+        anchor = closest(rect, mean_site)
         min_site = sites[findmin(site -> distance(anchor, site[2], p), sites)[2]][2]
         corners = (t, l), (t + N - 1, l), (t + N - 1, l + M - 1), (t, l + M - 1)
         stack_sites = filter(site -> any(corner -> distance(corner, site[2], p) <= distance(corner, min_site, p), corners), sites)
@@ -187,13 +187,13 @@ end
 @inbounds function jdac_aux4c!(grid, sites, p, depth, rect, stack)
     (t, l), (N, M) = rect
     if all(>(0), (N, M)) && any(==(0), @view grid[t:t+N-1, l:l+M-1])
+        mean_site = get_mean_site(stack)
         push_empty!(stack)
-        mean = reduce(.+, site[2] for site in sites) ./ length(sites)
-        anchor = closest(rect, mean)
+        anchor = closest(rect, mean_site)
         min_site = sites[findmin(site -> distance(anchor, site[2], p), sites)[2]][2]
         corners = (t, l), (t + N - 1, l), (t + N - 1, l + M - 1), (t, l + M - 1)
         fill_dists!(stack, min_site, enumerate(corners), p)
-        fill_sites!(stack, min_site, corners, sites, p)
+        fill_sites!(stack, corners, sites, p)
         jdac!(grid, get_sites(stack), jdac_aux4c!, p, depth - 1, rect, stack)
         pop!(stack)
     end
@@ -216,20 +216,20 @@ end
 @inbounds function jdac_aux5c!(grid, sites, p, depth, rect, stack)
     (t, l), (N, M) = rect
     if all(>(0), (N, M)) && any(==(0), @view grid[t:t+N-1, l:l+M-1])
+        sites_geometric_mean = get_mean_site(stack)
         push_empty!(stack)
-        sites_geometric_mean = reduce(.+, site[2] for site in sites) ./ length(sites)
         inner_anchor = closest_anchor_to_rectangle(rect, sites_geometric_mean)
         min_site = sites[findmin(site -> distance(inner_anchor, site[2], p), sites)[2]][2]
         corners = (t, l), (t + N - 1, l), (t + N - 1, l + M - 1), (t, l + M - 1)
         fill_dists!(stack, min_site, enumerate(corners), p)
-        fill_sites!(stack, min_site, corners, sites, p)
+        fill_sites!(stack, corners, sites, p)
         jdac!(grid, get_sites(stack), jdac_aux4c!, p, depth - 1, rect, stack)
         pop!(stack)
     end
     grid
 end
 
-@inbounds function jdac!(grid, sites, aux!, p::Real = 2, depth::Int = 1, rect = ((1, 1), size(grid)), stack = SiteStack{Float64,eltype(sites)}())
+@inbounds function jdac!(grid, sites, aux!, p::Real = 2, depth::Int = 1, rect = ((1, 1), size(grid)), stack = SiteStack{Float64,eltype(sites)}(sites))
     (t, l), (N, M) = rect
     if (N == 1 && M == 1) || length(sites) == 1
         _, min_index = findmin(site -> distance((t + N - 1, l + M - 1), site[2], p), sites)
@@ -244,7 +244,7 @@ end
         sub_rects = (tl_rect, bl_rect, tr_rect, br_rect)
         if depth > 0
             Threads.@threads for i in 1:4
-                aux!(grid, sites, p, depth, sub_rects[i], SiteStack{Float64,eltype(sites)}())
+                aux!(grid, sites, p, depth, sub_rects[i], SiteStack{Float64,eltype(sites)}(sites))
             end
         else
             for i in 1:4
