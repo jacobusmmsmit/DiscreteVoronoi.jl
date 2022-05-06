@@ -8,7 +8,7 @@ and-conquer algorithm.
 
 To use this package, install it with this command in the REPL:
 ```
-using Pkg; Pkg.add("https://github.com/jacobusmmsmit/DiscreteVoronoi.jl")
+using Pkg; Pkg.add(url="https://github.com/jacobusmmsmit/DiscreteVoronoi.jl")
 ```
 and we can use the functionality as such:
 ```
