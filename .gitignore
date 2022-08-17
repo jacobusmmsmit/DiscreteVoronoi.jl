@@ -3,3 +3,5 @@ Manifest.toml
 benchmark/jdac_benchmarks.jl
 *.pdf
 *.djvu
+.vscode
+/scripts

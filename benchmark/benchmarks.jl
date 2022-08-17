@@ -16,16 +16,18 @@ for n in [10, 100, 1000]
     for s in [isqrt(n), n, n * isqrt(n), n * n]
         SUITE[string("grid ", n, "x", n)][string(s, " sites")] = BenchmarkGroup()
 
-        SUITE[string("grid ", n, "x", n)][string(s, " sites")]["jfa!"] = @benchmarkable jfa!(grid, sites) setup=(
+        SUITE[string("grid ", n, "x", n)][string(s, " sites")]["jfa!"] = @benchmarkable jfa!(grid, sites) setup = (
             Random.seed!(42);
             grid = zeros(Int, $n, $n);
             sites = rand_sites(Int, size(grid)..., $s))
 
-        for aux! in [jdac_aux1a!, jdac_aux1b!, jdac_aux1c!, jdac_aux2a!, jdac_aux2b!, jdac_aux2c!, jdac_aux3a!, jdac_aux3b!, jdac_aux3c!]
-            SUITE[string("grid ", n, "x", n)][string(s, " sites")][aux!] = @benchmarkable jdacx!(grid, sites, $aux!) setup=(
+        for aux! in [jdac_aux1a!, jdac_aux1b!, jdac_aux1c!, jdac_aux2a!, jdac_aux2b!, jdac_aux2c!, jdac_aux3a!, jdac_aux3b!, jdac_aux3c!, jdac_aux4a!, jdac_aux4c!, jdac_aux5a!, jdac_aux5c!]
+            SUITE[string("grid ", n, "x", n)][string(s, " sites")][aux!] = @benchmarkable jdacx!(grid, sites, $aux!) setup = (
                 Random.seed!(42);
                 grid = zeros(Int, $n, $n);
                 sites = collect(enumerate(rand_sites(Int, size(grid)..., $s))))
         end
     end
 end
+
+run(SUITE)
