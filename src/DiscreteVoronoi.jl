@@ -24,8 +24,8 @@ end
 
 function _redac_voronoi!(grid, TL, BR, sites, p, elimination)
     # Again, first, if the grid is a single cell, we are done
-    if all(BR .== 1)
-        grid[TL] = find_closest_site(TL, sites, p)
+    if all((BR .- TL) .== 0)
+        grid[TL...] = find_closest_site(TL, sites, p)
     else
         # Otherwise we check if all corners have the same closest site
         corners = (TL, (TL[1], BR[2]), (BR[1], TL[2]), BR)
