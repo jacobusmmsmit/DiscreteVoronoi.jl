@@ -38,7 +38,7 @@ function _redac_voronoi!(grid, TL, BR, sites, p, elimination)
             local_sites = elimination(sites, TL, BR)
             # then divide the grid into quadrants and "conquer" each one
             for (quadrant_TL, quadrant_BR) in get_quadrants(TL, BR)
-                _dac_voronoi!(grid, quadrant_TL, quadrant_BR, local_sites, p)
+                _redac_voronoi!(grid, quadrant_TL, quadrant_BR, local_sites, p, elimination)
             end
         end
     end
