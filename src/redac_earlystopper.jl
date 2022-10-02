@@ -1,15 +1,9 @@
 # Reduce, Divide, and Conquer
-function early_stop_sort!(early_stopper::ES, predicate) where {ES<:EarlyStopper}
-    N = length(early_stopper)
-    mask = SVector{N,Bool}([predicate(el) for el in early_stopper]) # Apply predicate
-    n_trues = count(mask) # Get the index of the last "true" after sorting
-    perm = sortperm(mask, rev=true) # Return permutation that sorts the mask
-    permute!(view(early_stopper.obj, 1:N), perm) # Apply permutation to sites
-    return EarlyStopper(early_stopper.obj, n_trues)
-end
+"""
+    site_sort!(sites::ES, keep_predicate, TL, BR) where {ES<:EarlyStopper}
 
-early_stop_sort!(non_early_stopper, predicate) = early_stop_sort!(EarlyStopper(non_early_stopper), predicate)
-
+Produce an anonymous function to pass to `early_stop_sort!`.
+"""
 function site_sort!(sites::ES, keep_predicate, TL, BR) where {ES<:EarlyStopper}
     predicate(site) = keep_predicate(site, sites, TL, BR)
     return early_stop_sort!(sites, predicate)
@@ -17,7 +11,13 @@ end
 
 site_sort!(sites, keep_predicate) = site_sort!(EarlyStopper(sites), keep_predicate)
 
-function redac_voronoi!(grid, sites; p=2, predicate)
+"""
+    redac_voronoi!(grid, sites; p=2, predicate=exact_condition)
+
+Performs a divide-and-conquer method similar to `dac_voronoi!` but has an additional site-elimination
+step which aims to reduce the work of subsequent steps.
+"""
+function redac_voronoi!(grid, sites; p=2, predicate=exact_condition)
     TL = 1, 1
     BR = size(grid)
     _redac_voronoi!(grid, TL, BR, EarlyStopper(sites), p, predicate)
