@@ -1,5 +1,6 @@
 module DiscreteVoronoi
 
+#TODO: Fix bug with redac_voronoi! not returning the right answer
 #TODO: Implement hybrid algorithms for certain gridsize and number of sites
 
 export find_closest_site # Helper functions
