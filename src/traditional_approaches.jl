@@ -1,10 +1,20 @@
-function naive_voronoi!(grid, sites, p=2)
+"""
+    naive_voronoi!(grid, sites::T, p=2) where {T<:Vector{SVector{2,Int}}}
+
+Construct in-place a Voronoi diagram in the most basic way possible: check every cell and every combination.
+"""
+function naive_voronoi!(grid, sites::T, p=2) where {T<:Vector{SVector{2,Int}}}
     for I in CartesianIndices(grid)
         grid[I] = find_closest_site(Tuple(I), sites, p)
     end
     return nothing
 end
 
+"""
+    jfa_voronoi!(grid, sites::T, p=2) where {T<:Vector{SVector{2,Int}}}
+
+Construct in-place a Voronoi diagram using the [jump flooding algorithm](https://en.wikipedia.org/wiki/Jump_flooding_algorithm).
+"""
 function jfa_voronoi!(grid, sites::T, p=2) where {T<:Vector{SVector{2,Int}}}
     for site in sites
         # Splatting (grid[site...] = site) causes allocations?
@@ -34,7 +44,12 @@ function jfa_voronoi!(grid, sites::T, p=2) where {T<:Vector{SVector{2,Int}}}
     return nothing
 end
 
-function dac_voronoi!(grid, sites, p=2)
+"""
+    dac_voronoi!(grid, sites::T, p=2) where {T<:Vector{SVector{2,Int}}}
+
+Construct in-place a Voronoi diagram using the [divide-and-conquer algorithm](https://doi.org/10.1109%2Feit48999.2020.9208270).
+"""
+function dac_voronoi!(grid, sites::T, p=2) where {T<:Vector{SVector{2,Int}}}
     TL = (1, 1)
     BR = size(grid)
     _dac_voronoi!(grid, TL, BR, sites, p)
