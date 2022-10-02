@@ -5,8 +5,8 @@ using BenchmarkTools
 using Random
 
 @testset "EarlyStopper.jl" begin
-    iv = [1, 2, 3, 4, 5]
-    es = EarlyStopper(v, 4) # Specifically define to not satisfy the predicate below
+    v = [1, 2, 3, 4, 5]
+    es = DiscreteVoronoi.EarlyStopper(v, 4) # Specifically define to not satisfy the predicate below
     @testset "Basic Functionality" begin
         @test sum(i for i in es) == 10
         @test length(es) == 4
@@ -16,12 +16,12 @@ using Random
     
     @testset "Sorting" begin
         predicate(x) = 2 <= x <= 3
-        new_es = early_stop_sort!(es, predicate)
+        new_es = DiscreteVoronoi.early_stop_sort!(es, predicate)
         w = shuffle(1:100)
-        es2 = EarlyStopper(w)
+        es2 = DiscreteVoronoi.EarlyStopper(w)
         predicate2(x) = x <= 50
         @test length(new_es) == count(predicate.(v))
-        @test @ballocated(early_stop_sort!($es2, $predicate2), seconds=0.2, samples=100) == 0 
+        @test @ballocated(DiscreteVoronoi.early_stop_sort!($es2, $predicate2), seconds=0.2, samples=100) == 0 
     end
 end
 
@@ -47,10 +47,10 @@ end
     end
 
     @testset "Allocations" begin
-        @test (@ballocated redac_voronoi!($grid, $locs, predicate=exact_condition)) == 0
-        @test (@ballocated redac_voronoi!($grid, $locs, predicate=centre_anchor_condition)) == 0
-        @test (@ballocated dac_voronoi!($grid, $locs)) == 0
-        @test (@ballocated naive_voronoi!($grid, $locs)) == 0
-        @test (@ballocated jfa_voronoi!($grid, $locs)) == 0
+        @test @ballocated(redac_voronoi!($grid, $locs, predicate=exact_condition), seconds=1.0) == 0
+        @test @ballocated(redac_voronoi!($grid, $locs, predicate=centre_anchor_condition), seconds=1.0) == 0
+        @test @ballocated(dac_voronoi!($grid, $locs), seconds=1.0) == 0
+        @test @ballocated(naive_voronoi!($grid, $locs), seconds=1.0) == 0
+        @test @ballocated(jfa_voronoi!($grid, $locs), seconds=1.0) == 0
     end
 end
