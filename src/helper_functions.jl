@@ -55,3 +55,11 @@ end
 # new_sites2 = exact_elimination(new_sites, (1, 1), (2, 2))
 # @ballocated exact_elimination($sites, (1, 1), (1, 1))
 # @ballocated find_closest_site((1, 1), $sites)
+
+function predicate_sort!(v, predicate)
+    mask = SVector{length(v),Bool}([predicate(el) for el in v]) # Apply predicate
+    n_trues = count(mask) # Get the index of the last "true" after sorting
+    perm = sortperm(mask, rev=true) # Return permutation that sorts the mask
+    permute!(v, perm) # Apply permutation to v
+    return n_trues
+end

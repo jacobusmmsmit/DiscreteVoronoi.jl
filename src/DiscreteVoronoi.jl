@@ -1,5 +1,9 @@
 module DiscreteVoronoi
 
+#TODO: Sort sites for better cache locality?
+#TODO: ] remove BenchmarkTools PProf Plots
+#TODO: Implement hybrid DAC+Naive for certain size
+
 export find_closest_site # Helper functions
 export naive_voronoi!, jfa_voronoi!, dac_voronoi! # Traditional approaches
 
