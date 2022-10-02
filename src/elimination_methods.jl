@@ -8,6 +8,16 @@ function exact_condition(site, sites, TL, BR)
     return true
 end
 
+function centre_anchor_condition(site, sites, TL, BR)
+    centre = @. TL + BR / 2
+    anchor = find_closest_site(centre, sites)
+    corners = get_corners(TL, BR)
+    for corner in corners
+        distance(site, corner) <= distance(anchor, corner) && return true
+    end
+    return false
+end
+
 function exact_elimination(sites, TL, BR)
     mask = SVector{length(sites),Bool}(exact_condition(site, sites, TL, BR) for site in sites)
     return view(sites, mask)
