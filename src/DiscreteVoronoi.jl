@@ -1,8 +1,6 @@
 module DiscreteVoronoi
 
-#TODO: Sort sites for better cache locality?
-#TODO: ] remove BenchmarkTools PProf Plots
-#TODO: Implement hybrid DAC+Naive for certain size
+#TODO: Implement hybrid algorithms for certain gridsize and number of sites
 
 export find_closest_site # Helper functions
 export naive_voronoi!, jfa_voronoi!, dac_voronoi! # Traditional approaches
@@ -12,6 +10,7 @@ export exact_condition, centre_anchor_condition, exact_elimination, centre_ancho
 export redac_voronoi! # Reduce-Divide-and-Conquer
 
 using LinearAlgebra: norm
+using Random: shuffle
 using StaticArrays
 
 include("helper_functions.jl")
