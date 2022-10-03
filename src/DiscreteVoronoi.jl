@@ -7,7 +7,7 @@ export find_closest_site # Helper functions
 export naive_voronoi!, jfa_voronoi!, dac_voronoi! # Traditional approaches
 
 # Novel work (Joerg Walter and Jacobus Smit):
-export exact_condition, centre_anchor_condition, exact_elimination, centre_anchor_elimination # Elimination methods
+export exact_condition, centre_anchor_condition, exact_aux, centre_anchor_aux # Elimination methods
 export redac_voronoi! # Reduce-Divide-and-Conquer
 
 using LinearAlgebra: norm

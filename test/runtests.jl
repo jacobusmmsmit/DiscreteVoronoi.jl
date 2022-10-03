@@ -72,7 +72,7 @@ end
     dac_grid = deepcopy(grid)
     dac_voronoi!(dac_grid, locs)
     redac_grid = deepcopy(grid)
-    redac_voronoi!(redac_grid, locs, predicate=exact_condition)
+    redac_voronoi!(redac_grid, locs, auxiliary=exact_aux)
 
     @testset "Correctness" begin
         @test voronoi_equality(dac_grid, naive_grid)
@@ -83,8 +83,7 @@ end
         @test @ballocated(naive_voronoi!($grid, $locs), seconds = 1.0) == 0
         @test @ballocated(dac_voronoi!($grid, $locs), seconds = 1.0) == 0
         @test @ballocated(jfa_voronoi!($grid, $locs), seconds = 1.0) == 0
-        # These shouldn't pass, but I'd like to live in a world where they're possible.
-        # @test @ballocated(redac_voronoi!($grid, $locs, predicate=exact_condition), seconds = 1.0) == 0
-        # @test @ballocated(redac_voronoi!($grid, $locs, predicate=centre_anchor_condition), seconds = 1.0) == 0
+        @test @ballocated(redac_voronoi!($grid, $locs, auxiliary=exact_aux), seconds = 1.0) == 0
+        @test @ballocated(redac_voronoi!($grid, $locs, auxiliary=centre_anchor_aux), seconds = 1.0) == 0
     end
 end
