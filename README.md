@@ -1,6 +1,6 @@
 # DiscreteVoronoi
 
-A package for computing discrete approximations of Voronoi diagrams. All functions are in-place.
+A package for computing discrete approximations of Voronoi diagrams. All Voronoi diagram calculating functions are in-place.
 
 ```julia
 using DiscreteVoronoi
