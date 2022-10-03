@@ -11,10 +11,10 @@ n = 50
 p = 10
 grid = zeros(SVector{2,Int}, n, n)
 sites = [SVector{2,Int}(rand(1:n, 2)) for _ in 1:p]
-naive_voronoi!(grid, sites)
+redac_voronoi!(grid, sites)
 ```
 
-There are currently three ways of computing discrete Voronoi diagrams exported, the first three of which are completely allocation free:
+There are currently three ways of computing discrete Voronoi diagrams exported, they are all completely allocation free:
 * A naive method which simply compares all cells to all sites and chooses the closest
 * The jump flooding algorithm, which is explained in more detail [here](https://en.wikipedia.org/wiki/Jump_flooding_algorithm)
 * A divide-and-conquer method first detailed [here](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7840081/).
