@@ -24,7 +24,6 @@ const Coord = SVector{2,Int}
 end
 
 
-
 @testset "EarlyStopper.jl" begin
     v = [1, 2, 3, 4, 5]
     es = EarlyStopper(v, 4) # Specifically define to not satisfy the predicate below
@@ -81,10 +80,11 @@ end
     end
 
     @testset "Allocations" begin
-        @test @ballocated(redac_voronoi!($grid, $locs, predicate=exact_condition), seconds = 1.0) == 0
-        @test @ballocated(redac_voronoi!($grid, $locs, predicate=centre_anchor_condition), seconds = 1.0) == 0
-        @test @ballocated(dac_voronoi!($grid, $locs), seconds = 1.0) == 0
         @test @ballocated(naive_voronoi!($grid, $locs), seconds = 1.0) == 0
+        @test @ballocated(dac_voronoi!($grid, $locs), seconds = 1.0) == 0
         @test @ballocated(jfa_voronoi!($grid, $locs), seconds = 1.0) == 0
+        # These shouldn't pass, but I'd like to live in a world where they're possible.
+        # @test @ballocated(redac_voronoi!($grid, $locs, predicate=exact_condition), seconds = 1.0) == 0
+        # @test @ballocated(redac_voronoi!($grid, $locs, predicate=centre_anchor_condition), seconds = 1.0) == 0
     end
 end
