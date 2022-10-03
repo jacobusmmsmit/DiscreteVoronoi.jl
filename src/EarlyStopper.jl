@@ -39,22 +39,20 @@ Base.lastindex(ES::EarlyStopper{T}) where {T} = length(ES)
     Sorts `early_stopper.obj` based on `predicate` and returns an `EarlyStopper` of the same type
     that contains updated `stop_at` information. The sorting is unstable. 
 """
-function early_stop_sort!(early_stopper::ES, predicate::F)::ES where {ES<:EarlyStopper, F<:Function}
+function early_stop_sort!(early_stopper::ES, predicate::F)::ES where {ES<:EarlyStopper,F<:Function}
     n_trues = early_stopper.stop_at
     for (i, element) in enumerate(early_stopper)
         # n_trues is updated during iteration so we need to manually break.
-        if i > n_trues
-            break
-        end
+        i > n_trues && break
         # n_trues is the index of the last predicate-truthy element in the vector, swapping
         # causes the current value to be the first predicate-falsey element.
         if !predicate(element)
-            counter = 0
-            while !predicate(early_stopper[n_trues - counter])
-                counter += 1
+            right_falses = 0
+            while n_trues - right_falses > i && !predicate(early_stopper[n_trues-right_falses])
+                right_falses += 1
             end
-            swap!(early_stopper, i, n_trues - counter)
-            n_trues -= counter
+            swap!(early_stopper, i, n_trues - right_falses) # Does nothing if i == j
+            n_trues -= (right_falses + 1) # right_falses + 1 from left (current element)
         end
     end
     return EarlyStopper(early_stopper.obj, n_trues)
