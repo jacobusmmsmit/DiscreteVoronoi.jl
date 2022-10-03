@@ -16,10 +16,12 @@ end
 """
     swap!(v, i::Int, j::Int)
 
-Swap (in-place) the elements of `v` indexed by `i` and `j`.
+Swap (in-place) the elements of `v` indexed by `i` and `j`. Does nothing if `i == j`.
 """
-function swap!(v, i::Int, j::Int) 
-    v[i], v[j] = v[j], v[i]
+function swap!(v, i::Int, j::Int)
+    if i != j
+        v[i], v[j] = v[j], v[i]
+    end
     return nothing
 end
 
@@ -66,7 +68,7 @@ Given a grid of un-plottable things, it assigns each unique value in the grid a 
 `shuffle_cells` determines whether the assigned values are randomly shuffled before assignment.
 If they're not you might get a pretty gradient or other pattern :)
 """
-function label(grid; shuffle_cells = true)
+function label(grid; shuffle_cells=true)
     if shuffle_cells
         maybe_shuffle = shuffle
     else
@@ -78,3 +80,16 @@ function label(grid; shuffle_cells = true)
     end
     return labelled_grid
 end
+
+
+function voronoi_equality(grid1, grid2)
+    size(grid1) == size(grid2) || throw(ArgumentError("Grids should have the same shape, got shapes $(size(grid1)) and $(size(grid2))"))
+    for I in CartesianIndices(grid1)
+        cell = SVector{2,Int}(Tuple(I))
+        grid1[I] == grid2[I] && continue
+        distance(cell, grid1[I]) == distance(cell, grid2[I]) || return false
+    end
+    return true
+end
+
+voronoi_equality(grids...) = reduce(voronoi_equality, grids)

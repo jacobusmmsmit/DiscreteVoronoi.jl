@@ -57,7 +57,7 @@ function dac_voronoi!(grid, sites::T, p=2) where {T<:Vector{SVector{2,Int}}}
 end
 
 function _dac_voronoi!(grid, TL, BR, sites, p)
-    # First, if the grid is a single cell, we are done
+    # First, if the grid is a single cell then we are done
     if all((BR .- TL) .== 0)
         grid[TL...] = find_closest_site(TL, sites, p)
     else
