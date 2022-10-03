@@ -23,7 +23,6 @@ const Coord = SVector{2,Int}
     @test all(s -> all(TL .<= s .<= BR), exact_newsites)  # All `exact_newsites` are inside rectangle TL-BR
 end
 
-
 @testset "EarlyStopper.jl" begin
     v = [1, 2, 3, 4, 5]
     es = EarlyStopper(v, 4) # Specifically define to not satisfy the predicate below
@@ -44,7 +43,9 @@ end
         w = shuffle(1:100)
         es2 = EarlyStopper(w)
         predicate2(x) = x <= 50
-        @test @ballocated(early_stop_sort!($es2, $predicate2), seconds = 0.2, samples = 100) == 0
+        @test @ballocated(
+            early_stop_sort!($es2, $predicate2), seconds = 0.2, samples = 100
+        ) == 0
 
         # Representative workload correctness test
         n = 500
@@ -55,7 +56,7 @@ end
         es3 = EarlyStopper(locs)
         predicate3(x) = exact_condition(x, locs, TL, BR)
         new_es3 = early_stop_sort!(es3, predicate3)
-        @test new_es3.obj == sort(locs, by=predicate3)
+        @test new_es3.obj == sort(locs; by=predicate3)
     end
 end
 
@@ -66,13 +67,12 @@ end
     locs = sort([Coord(rand(1:n, 2)) for _ in 1:l])
     grid = zeros(Coord, (n, n))
 
-    ### Test for correctness
     naive_grid = deepcopy(grid)
     naive_voronoi!(naive_grid, locs) # Baseline for correctness
     dac_grid = deepcopy(grid)
     dac_voronoi!(dac_grid, locs)
     redac_grid = deepcopy(grid)
-    redac_voronoi!(redac_grid, locs, auxiliary=exact_aux)
+    redac_voronoi!(redac_grid, locs; auxiliary=exact_aux)
 
     @testset "Correctness" begin
         @test voronoi_equality(dac_grid, naive_grid)
@@ -83,7 +83,11 @@ end
         @test @ballocated(naive_voronoi!($grid, $locs), seconds = 1.0) == 0
         @test @ballocated(dac_voronoi!($grid, $locs), seconds = 1.0) == 0
         @test @ballocated(jfa_voronoi!($grid, $locs), seconds = 1.0) == 0
-        @test @ballocated(redac_voronoi!($grid, $locs, auxiliary=exact_aux), seconds = 1.0) == 0
-        @test @ballocated(redac_voronoi!($grid, $locs, auxiliary=centre_anchor_aux), seconds = 1.0) == 0
+        @test @ballocated(
+            redac_voronoi!($grid, $locs, auxiliary=exact_aux), seconds = 1.0
+        ) == 0
+        @test @ballocated(
+            redac_voronoi!($grid, $locs, auxiliary=centre_anchor_aux), seconds = 1.0
+        ) == 0
     end
 end

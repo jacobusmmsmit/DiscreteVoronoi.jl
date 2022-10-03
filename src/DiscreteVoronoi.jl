@@ -1,23 +1,22 @@
 module DiscreteVoronoi
 
+#TODO: Allow user to select p
+#TODO: Allow user to input an arbitrary distance function
 #TODO: Implement hybrid algorithms for certain gridsize and number of sites.
 #TODO: Add nice UnicodePlot recipe :)
 
-export find_closest_site # Helper functions
-export naive_voronoi!, jfa_voronoi!, dac_voronoi! # Traditional approaches
-
-# Novel work (Joerg Walter and Jacobus Smit):
-export exact_condition, centre_anchor_condition, exact_aux, centre_anchor_aux # Elimination methods
-export redac_voronoi! # Reduce-Divide-and-Conquer
+export find_closest_site, get_corners, get_quadrants, label_voronoi_grid # Helper functions
+export naive_voronoi!, jfa_voronoi!, dac_voronoi!, redac_voronoi! # Core functionality
 
 using LinearAlgebra: norm
 using Random: shuffle
 using StaticArrays
 
-include("helper_functions.jl")
-include("traditional_approaches.jl")
+# Completely non-exported files with core definitions
+include("EarlyStopper.jl") # Because every package needs at least one struct...
 include("elimination_methods.jl")
-include("EarlyStopper.jl")
-include("redac_earlystopper.jl")
+
+include("helper_functions.jl")
+include("core_algorithms.jl")
 
 end # module
