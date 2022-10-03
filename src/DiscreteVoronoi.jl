@@ -1,7 +1,7 @@
 module DiscreteVoronoi
 
-#TODO: Fix bug with redac_voronoi! not returning the right answer
-#TODO: Implement hybrid algorithms for certain gridsize and number of sites
+#TODO: Implement hybrid algorithms for certain gridsize and number of sites.
+#TODO: Add nice UnicodePlot recipe :)
 
 export find_closest_site # Helper functions
 export naive_voronoi!, jfa_voronoi!, dac_voronoi! # Traditional approaches
