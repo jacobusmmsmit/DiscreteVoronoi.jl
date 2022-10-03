@@ -4,7 +4,7 @@ using Test
 using BenchmarkTools
 using Random
 
-using DiscreteVoronoi: get_corners, voronoi_equality
+using DiscreteVoronoi: get_corners, voronoi_equality, exact_condition, exact_aux, centre_anchor_aux
 using DiscreteVoronoi: EarlyStopper, early_stop_sort!
 
 const Coord = SVector{2,Int}

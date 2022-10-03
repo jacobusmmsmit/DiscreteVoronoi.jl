@@ -57,7 +57,7 @@ function early_stop_sort!(
         if !predicate(element)
             right_falses = 0
             while n_trues - right_falses > i &&
-                !predicate(early_stopper[n_trues - right_falses])
+                !predicate(early_stopper[n_trues-right_falses])
                 right_falses += 1
             end
             swap!(early_stopper, i, n_trues - right_falses) # Does nothing if i == j
