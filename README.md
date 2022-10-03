@@ -2,9 +2,11 @@
 
 A package for computing discrete approximations of Voronoi diagrams. All Voronoi diagram calculating functions are in-place.
 
+Currently, to use this package you need to declare your sites as a `Vector{SVector{2,Int}}` and your grid as a `Matrix{SVector{2,Int}}` and hence there is a strong dependency on `StaticArrays`.
+
 ```julia
 using DiscreteVoronoi
-using StaticVectors
+using StaticArrays
 
 # Testing
 n = 50
