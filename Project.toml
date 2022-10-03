@@ -1,9 +1,6 @@
 name = "DiscreteVoronoi"
 uuid = "01fd5c3e-b3b7-45fb-9d19-e82518019796"
-authors = [
-    "Jacobus Smit <jacobusmmsmit@gmail.com>",
-    "Joerg Walter <undisclosed>"
-]
+authors = ["Jacobus Smit <jacobusmmsmit@gmail.com>", "Joerg Walter <undisclosed>"]
 version = "0.1.0"
 
 [deps]
