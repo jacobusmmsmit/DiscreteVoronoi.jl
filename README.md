@@ -36,6 +36,6 @@ Additionally, the package exports some helper functions for analysing Voronoi di
  * Currently, I have not implemented multithreaded (or GPU in the case of JFA) versions of these algorithms on the main branch, but the legacy branch contains versions of the algorithms that do have this capability.
 
 ## Contributions:
-* @jacobusmmsmit - Author and maintainer
-* @goerch - Author
-* @marcelroed - Algorithmic improvements `early_stop_sort!`
+* [@jacobusmmsmit](github.com/jacobusmmsmit) - Author and maintainer
+* [@goerch](github.com/goerch) - Author
+* [@marcelroed](github.com/marcelroed) - Algorithmic improvements `early_stop_sort!`
