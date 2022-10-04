@@ -34,3 +34,8 @@ Additionally, the package exports some helper functions for analysing Voronoi di
  * Support for arbitrary distance functions.
  * Implementing a hybrid version of `redac_voronoi!` and `dac_voronoi!` that switches to `naive_voronoi!` once a certain size is reached.
  * Currently, I have not implemented multithreaded (or GPU in the case of JFA) versions of these algorithms on the main branch, but the legacy branch contains versions of the algorithms that do have this capability.
+
+## Contributions:
+* @jacobusmmsmit - Author and maintainer
+* @goerch - Author
+* @marcelroed - Algorithmic improvements `early_stop_sort!`
