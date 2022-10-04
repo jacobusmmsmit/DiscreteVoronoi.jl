@@ -46,6 +46,7 @@ See name. `p` is which Lᵖ norm to use.
 """
 function find_closest_site(cell, sites, p=2)
     first_site, rest_sites = Iterators.peel(sites)
+    isnothing(rest_sites) && return first_site
     min_dist = distance(cell, first_site, p)
     min_site = first_site
     for site in rest_sites
@@ -73,7 +74,7 @@ function label_voronoi_grid(grid; shuffle_cells=true)
     end
     labelled_grid = similar(grid, Int)
     for (i, val) in (enumerate ∘ maybe_shuffle ∘ unique)(grid)
-        labelled_grid[grid .== Ref(val)] .= i
+        labelled_grid[grid.==Ref(val)] .= i
     end
     return labelled_grid
 end
