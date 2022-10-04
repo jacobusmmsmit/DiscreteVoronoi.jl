@@ -11,7 +11,7 @@ Construct in-place a Voronoi diagram in the most basic way possible: check every
 """
 function naive_voronoi!(grid, sites::T, p=2) where {T<:Vector{SVector{2,Int}}}
     for I in CartesianIndices(grid)
-        grid[I] = find_closest_site(Tuple(I), sites, p)
+        @inbounds grid[I] = find_closest_site(Tuple(I), sites, p)
     end
     return nothing
 end
@@ -20,6 +20,7 @@ end
     jfa_voronoi!(grid, sites::T, p=2) where {T<:Vector{SVector{2,Int}}}
 
 Construct in-place a Voronoi diagram using the [jump flooding algorithm](https://en.wikipedia.org/wiki/Jump_flooding_algorithm).
+The algorithm assumes that a blank cell in the grid has value `SVector(0, 0)` and that sites are inside the grid.
 """
 function jfa_voronoi!(grid, sites::T, p=2) where {T<:Vector{SVector{2,Int}}}
     for site in sites
@@ -30,7 +31,6 @@ function jfa_voronoi!(grid, sites::T, p=2) where {T<:Vector{SVector{2,Int}}}
     k = max(size(grid)...)
     while k > 1
         k = k ÷ 2 + k % 2
-        # @inbounds for y in 1:size(grid, 2), x in 1:size(grid, 1)
         @inbounds for I in CartesianIndices(grid)
             x, y = Tuple(I)
             for j in (-k, 0, k), i in (-k, 0, k)
@@ -62,10 +62,15 @@ function dac_voronoi!(grid, sites::T, p=2) where {T<:Vector{SVector{2,Int}}}
     return nothing
 end
 
-function _dac_voronoi!(grid, TL, BR, sites, p)
-    # First, if the grid is a single cell then we are done
-    if all((BR .- TL) .== 0)
+@inbounds function _dac_voronoi!(grid, TL, BR, sites, p)
+    # First, if the sub-grid has any side-length zero, do nothing.
+    side_lengths = (BR .- TL)
+    any(side_lengths .== 0) && return nothing
+    # Then, if the grid is a single cell then we are done
+    if all(side_lengths .== 1)
         grid[TL...] = find_closest_site(TL, sites, p)
+    elseif length(sites) == 1 # Same if there is a single site
+        view(grid, TL[1]:BR[1], TL[2]:BR[2]) .= Ref(first(sites))
     else
         # Otherwise we check if all corners have the same closest site
         corners = get_corners(TL, BR)
@@ -97,10 +102,15 @@ function redac_voronoi!(
     return nothing
 end
 
-function _redac_voronoi!(grid, TL, BR, sites::ES, p, auxiliary) where {ES<:EarlyStopper}
-    # First, if the grid is a single cell then we are done
-    if all((BR .- TL) .== 0)
+@inbounds function _redac_voronoi!(grid, TL, BR, sites::ES, p, auxiliary) where {ES<:EarlyStopper}
+    # First, if the sub-grid has any side-length zero, do nothing.
+    side_lengths = (BR .- TL)
+    any(side_lengths .== 0) && return nothing
+    # Then, if the grid is a single cell then we are done
+    if all(side_lengths .== 1)
         grid[TL...] = find_closest_site(TL, sites, p)
+    elseif length(sites) == 1 # Same if there is a single site
+        view(grid, TL[1]:BR[1], TL[2]:BR[2]) .= Ref(first(sites))
     else
         # Otherwise we check if all corners have the same closest site
         corners = get_corners(TL, BR)
