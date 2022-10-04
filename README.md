@@ -22,7 +22,7 @@ There are currently three ways of computing discrete Voronoi diagrams exported, 
 * `dac_voronoi!` employs a divide-and-conquer method first detailed [here](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7840081/).
 * `redac_voronoi!` (reduce-divide-and-conquer) additionally runs a site elimination algorithm before each recursive step. This elimination algorithm aims to reduce the amount of unnecessary work performed by the algorithm in subsequent recursions by removing seeds that are far away from the corners.
 
-Luckily, which algorithm you should use for the fastest execution time depends very little on the problem at hand. Put simply `redac_voronoi!` is by far the fastest in all but the smallest of use cases (think 10 by 10 grids with only 2 sites).
+Which algorithm you should use for the fastest execution time depends somewhat on the task at hand. The best thing to do is to try all above for your usecase and decide from benchmarks. As a rule of thumb, the larger the grid is the better the divide-and-conquer methods will be in comparison. Particularly if the number of sites scales with the size of the grid (`n^2`) faster than `log(n)` (natural log), then `redac_voronoi!` will be much faster than `dac_voronoi!`. 
 
 Additionally, the package exports some helper functions for analysing Voronoi diagrams and writing your own algorithms:
 * `find_closest_site` finds the closest site to a specified cell in the Lp sense.
