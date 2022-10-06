@@ -16,7 +16,8 @@ sites = [SVector{2,Int}(rand(1:n, 2)) for _ in 1:p]
 redac_voronoi!(grid, sites)
 ```
 
-There are currently three ways of computing discrete Voronoi diagrams exported, they are all completely allocation free:
+There are currently three ways of computing discrete Voronoi diagrams exported, they are all completely allocation free and called in the same way:
+* `*_voronoi!(grid::Matrix{SVector{2,Int}}, sites::Vector{SVector{2,Int}}` is the generic function call for all of the following functions,
 * `naive_voronoi!` simply compares all cells to all sites and chooses the closest
 * `jfa_voronoi!` uses the jump flooding algorithm, which is explained in more detail [here](https://en.wikipedia.org/wiki/Jump_flooding_algorithm)
 * `dac_voronoi!` employs a divide-and-conquer method first detailed [here](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7840081/).
