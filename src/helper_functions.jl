@@ -5,10 +5,44 @@ end
 """
     get_corners(TL, BR)
 
-Returns the corners of the rectangle defined by its top-left (TL) and bottom-right (BR) corners
+Returns the corners of the rectangle defined by its top-left (TL) and
+bottom-right (BR) corners. The order of returning is TL, TR, BR, BL such that
+the pairs of corners can be looped over to get edges.
 """
 function get_corners(TL, BR)
-    return (TL, (TL[1], BR[2]), (BR[1], TL[2]), BR)
+    return (TL, (TL[1], BR[2]), BR, (BR[1], TL[2]))
+end
+
+
+"""
+    get_edge(TL, BR)
+
+Returns the edge (cells) between two vertically or horizontally aligned points.
+"""
+function get_edge(a, b)
+    all(a .!= b) && throw(ArgumentError("Points $a and $b must be vertically or horizontally aligned"))
+    if a[1] == b[1]
+        x, y = extrema((a[2], b[2]))
+        return (SVector{2,Int}(a[1], j) for j in x:1:y)
+    elseif a[2] == b[2]
+        x, y = extrema((a[1], b[1]))
+        return (SVector{2,Int}(i, a[2]) for i in x:1:y)
+    end
+end
+
+"""
+    get_edges(TL, BR)
+
+Returns a generator containing the cells on the border edges of the rectangle
+defined by its top-left (TL) and bottom-right (BR) corners.
+"""
+function get_edges(TL, BR)
+    corners = get_corners(TL, BR)
+    edge_cells = map(1:4) do i
+        j = mod(i, 4) + 1
+        return get_edge(corners[i], corners[j])
+    end
+    return Iterators.flatten(edge_cells)
 end
 
 """

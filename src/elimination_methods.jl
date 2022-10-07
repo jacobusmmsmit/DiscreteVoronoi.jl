@@ -36,3 +36,15 @@ function exact_aux(sites, TL, BR)
     predicate(site) = all(TL .<= site .<= BR) || exact_condition(site, sites, TL, BR)
     return early_stop_sort!(sites, predicate)
 end
+
+function edge_aux(sites, TL, BR)
+    corners = get_corners(TL, BR)
+    keep_per_edge = Iterators.map(1:4) do i
+        j = mod(i, 4) + 1
+        edge_cells = get_edge(corners[i], corners[j])
+        return Iterators.map(cell -> find_closest_site(cell, sites), edge_cells)
+    end
+    sites_to_keep = Iterators.flatten(keep_per_edge)
+    predicate(site) = all(TL .<= site .<= BR) || site in sites_to_keep
+    return early_stop_sort!(sites, predicate)
+end
