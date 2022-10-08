@@ -1,7 +1,7 @@
 # This is non-exported, non-userfacing code.
 # This file contains the elimination methods used in `redac_voronoi!`.
 
-function exact_condition(site, sites, TL, BR)
+function exact_condition(site, sites, TL, BR; distance=euclidean)
     for other_site in sites
         site == other_site && continue
         if all(
@@ -14,14 +14,14 @@ function exact_condition(site, sites, TL, BR)
     return true
 end
 
-function centre_anchor_condition(site, sites, TL, BR)
+function centre_anchor_condition(site, sites, TL, BR; distance=euclidean)
     centre = @. TL + BR / 2
     anchor = find_closest_site(centre, sites)
     corners = get_corners(TL, BR)
     return any(distance(site, corner) <= distance(anchor, corner) for corner in corners)
 end
 
-function centre_anchor_aux(sites, TL, BR)
+function centre_anchor_aux(sites, TL, BR; distance=euclidean)
     centre = @. TL + BR / 2
     anchor = find_closest_site(centre, sites)
     corners = get_corners(TL, BR)
@@ -32,8 +32,8 @@ function centre_anchor_aux(sites, TL, BR)
     return early_stop_sort!(sites, predicate)
 end
 
-function exact_aux(sites, TL, BR)
-    predicate(site) = all(TL .<= site .<= BR) || exact_condition(site, sites, TL, BR)
+function exact_aux(sites, TL, BR; distance=euclidean)
+    predicate(site) = all(TL .<= site .<= BR) || exact_condition(site, sites, TL, BR; distance=distance)
     return early_stop_sort!(sites, predicate)
 end
 

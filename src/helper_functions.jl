@@ -1,7 +1,3 @@
-function distance(x, y, p=2)
-    return norm(x .- y, p)
-end
-
 """
     get_corners(TL, BR)
 
@@ -74,17 +70,17 @@ function get_quadrants(TL, BR)
 end
 
 """
-    find_closest_site(cell, sites, p=2)
+    find_closest_site(cell, sites; distance=euclidean)
 
-See name. `p` is which Lᵖ norm to use.
+Returns the closest site to `cell` in `sites` determined by `distance`.
 """
-function find_closest_site(cell, sites, p=2)
+function find_closest_site(cell, sites; distance=euclidean)
     first_site, rest_sites = Iterators.peel(sites)
     isnothing(rest_sites) && return first_site
-    min_dist = distance(cell, first_site, p)
+    min_dist = distance(cell, first_site)
     min_site = first_site
     for site in rest_sites
-        cur_dist = distance(cell, site, p)
+        cur_dist = distance(cell, site)
         if cur_dist < min_dist
             min_dist = cur_dist
             min_site = site
