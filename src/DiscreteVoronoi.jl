@@ -11,6 +11,7 @@ export naive_voronoi!, jfa_voronoi!, dac_voronoi!, redac_voronoi! # Core functio
 using LinearAlgebra: norm
 using Random: shuffle
 using StaticArrays
+using Distances: euclidean
 
 # Completely non-exported files with core definitions
 include("EarlyStopper.jl") # Because every package needs at least one struct...
