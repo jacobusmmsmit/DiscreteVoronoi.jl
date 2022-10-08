@@ -110,13 +110,13 @@ function label_voronoi_grid(grid; shuffle_cells=true)
 end
 
 """
-    voronoi_equality(grids...)
+    voronoi_equality(grid1, grid2; distance=euclidean)
 
 Checks equality of Voronoi diagrams accounting for the fact that there may be
 multiple correct/equivalent solutions as some sites may be the same distance
 from some cells.
 """
-function voronoi_equality(grid1, grid2)
+function voronoi_equality(grid1, grid2; distance=euclidean)
     size(grid1) == size(grid2) || throw(
         ArgumentError(
             "Grids should have the same shape, got shapes $(size(grid1)) and $(size(grid2))",
@@ -129,5 +129,3 @@ function voronoi_equality(grid1, grid2)
     end
     return true
 end
-
-voronoi_equality(grids...) = reduce(voronoi_equality, grids)
