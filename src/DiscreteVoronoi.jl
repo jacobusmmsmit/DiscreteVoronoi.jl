@@ -1,7 +1,5 @@
 module DiscreteVoronoi
 
-#TODO: Allow user to select p
-#TODO: Allow user to input an arbitrary distance function
 #TODO: Implement hybrid algorithms for certain gridsize and number of sites.
 #TODO: Add nice UnicodePlot recipe :)
 
