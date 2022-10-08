@@ -1,7 +1,7 @@
 name = "DiscreteVoronoi"
 uuid = "01fd5c3e-b3b7-45fb-9d19-e82518019796"
 authors = ["Jacobus Smit <jacobusmmsmit@gmail.com>", "Jörg Walter <undisclosed>"]
-version = "0.1.2"
+version = "0.2.0"
 
 [deps]
 Distances = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
