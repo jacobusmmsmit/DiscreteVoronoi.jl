@@ -63,6 +63,7 @@ function dac_voronoi!(grid::Matrix{T}, sites::Vector{T}; distance=euclidean) whe
 end
 
 @inbounds function _dac_voronoi!(grid, TL, BR, sites; distance)
+    any(TL .> BR) && return nothing
     if all(BR .== TL)
         grid[TL...] = find_closest_site(TL, sites, distance=distance)
     elseif length(sites) == 1 # Same if there is a single site
@@ -97,6 +98,7 @@ function redac_voronoi!(grid::Matrix{T}, sites::Vector{T}; distance=euclidean, a
 end
 
 @inbounds function _redac_voronoi!(grid, TL, BR, sites::ES; distance, auxiliary) where {ES<:EarlyStopper}
+    any(TL .> BR) && return nothing
     # Then, if the grid is a single cell then we are done
     if all(BR .== TL)
         grid[TL...] = find_closest_site(TL, sites, distance=distance)
