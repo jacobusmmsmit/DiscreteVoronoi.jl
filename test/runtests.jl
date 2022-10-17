@@ -3,11 +3,16 @@ using StaticArrays
 using Test
 using BenchmarkTools
 using Random
+using Distances
 
 using DiscreteVoronoi: get_corners, voronoi_equality, exact_condition, exact_aux, centre_anchor_aux
 using DiscreteVoronoi: EarlyStopper, early_stop_sort!
 
 const Coord = SVector{2,Int}
+
+function random_coordinates(N, K)
+    Coord.(shuffle!([Iterators.product(1:N, 1:N)...])[1:K])
+end
 
 @testset "Elimination methods" begin
     # Setup: a grid with sites on and directly around each corner.
@@ -51,7 +56,8 @@ end
         n = 500
         l = 30
         TL, BR = (1, 1), (n, n)
-        locs = sort([Coord(rand(1:n, 2)) for _ in 1:l])
+        locs = random_coordinates(n, l)
+        # locs = sort([Coord(rand(1:n, 2)) for _ in 1:l]) # Possibly overlapping sites.
         grid = zeros(Coord, (n, n))
         es3 = EarlyStopper(locs)
         predicate3(x) = exact_condition(x, locs, TL, BR)
@@ -64,7 +70,8 @@ end
     n = 11
     l = 3
     TL, BR = (1, 1), (n, n)
-    locs = sort([Coord(rand(1:n, 2)) for _ in 1:l])
+    # locs = sort([Coord(rand(1:n, 2)) for _ in 1:l])
+    locs = random_coordinates(n, l) # Possibly overlapping sites.
     grid = zeros(Coord, (n, n))
 
     naive_grid = deepcopy(grid)
@@ -74,9 +81,32 @@ end
     redac_grid = deepcopy(grid)
     redac_voronoi!(redac_grid, locs; auxiliary=exact_aux)
 
+    # Cityblock = L1 = Taxicab
+    naive_grid_cityblock = deepcopy(grid)
+    naive_voronoi!(naive_grid_cityblock, locs; distance=cityblock)
+    dac_grid_cityblock = deepcopy(grid)
+    dac_voronoi!(dac_grid_cityblock, locs; distance=cityblock)
+    redac_grid_cityblock = deepcopy(grid)
+    redac_voronoi!(redac_grid_cityblock, locs; distance=cityblock)
+
+    # Chebyshev = L∞ = maximum norm
+    naive_grid_chebyshev = deepcopy(grid)
+    naive_voronoi!(naive_grid_chebyshev, locs; distance=chebyshev)
+    dac_grid_chebyshev = deepcopy(grid)
+    dac_voronoi!(dac_grid_chebyshev, locs; distance=chebyshev)
+    redac_grid_chebyshev = deepcopy(grid)
+    redac_voronoi!(redac_grid_chebyshev, locs; distance=chebyshev)
+
     @testset "Correctness" begin
         @test voronoi_equality(dac_grid, naive_grid)
         @test voronoi_equality(redac_grid, naive_grid)
+    end
+
+    @testset "Different Lp Norms" begin
+        @test voronoi_equality(dac_grid_cityblock, naive_grid_cityblock; distance=cityblock)
+        @test voronoi_equality(redac_grid_cityblock, naive_grid_cityblock; distance=cityblock)
+        @test voronoi_equality(dac_grid_chebyshev, naive_grid_chebyshev; distance=chebyshev)
+        @test voronoi_equality(redac_grid_chebyshev, naive_grid_chebyshev; distance=chebyshev)
     end
 
     @testset "Allocations" begin
