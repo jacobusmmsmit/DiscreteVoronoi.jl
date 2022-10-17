@@ -2,10 +2,14 @@ name = "DiscreteVoronoi"
 uuid = "01fd5c3e-b3b7-45fb-9d19-e82518019796"
 authors = ["Jacobus Smit <jacobusmmsmit@gmail.com>", "Jörg Walter <undisclosed>"]
 <<<<<<< HEAD
+<<<<<<< HEAD
 version = "0.2.1"
 =======
 version = "0.2.0"
 >>>>>>> f04f7f1 (Updave version to reflect breaking change)
+=======
+version = "0.2.1"
+>>>>>>> 74ba2de (Bump version)
 
 [deps]
 Distances = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
