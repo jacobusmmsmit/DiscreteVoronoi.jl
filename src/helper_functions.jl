@@ -60,7 +60,7 @@ Returns a tuple containing top-left (TL) and bottom-right (BR) corners for each 
 """
 function get_quadrants(TL, BR)
     MID_TL = (TL .+ BR) .÷ 2
-    MID_BR = TL .+ BR .- MID_TL
+    MID_BR = MID_TL .+ 1
     return (
         (TL, MID_TL),
         ((MID_BR[1], TL[2]), (BR[1], MID_TL[2])),
