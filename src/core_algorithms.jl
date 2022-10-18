@@ -9,7 +9,7 @@
 
 Construct in-place a Voronoi diagram in the most basic way possible: check every cell and every combination.
 """
-function naive_voronoi!(grid::Matrix{T}, sites::Vector{T}; distance=euclidean) where {T<:SVector{2,Int}}
+function naive_voronoi!(grid::Matrix{T}, sites::Vector{T}; distance=euclidean) where {T<:Coord}
     for I in CartesianIndices(grid)
         @inbounds grid[I] = find_closest_site(Tuple(I), sites; distance=distance)
     end
@@ -22,7 +22,7 @@ end
 Construct in-place a Voronoi diagram using the [jump flooding algorithm](https://en.wikipedia.org/wiki/Jump_flooding_algorithm).
 The algorithm assumes that a blank cell in the grid has value `SVector(0, 0)` and that sites are inside the grid.
 """
-function jfa_voronoi!(grid::Matrix{T}, sites::Vector{T}; distance=euclidean) where {T<:SVector{2,Int}}
+function jfa_voronoi!(grid::Matrix{T}, sites::Vector{T}; distance=euclidean) where {T<:Coord}
     for site in sites
         # Splatting (grid[site...] = site) causes allocations?
         x, y = site
@@ -55,7 +55,7 @@ end
 
 Construct in-place a Voronoi diagram using the [divide-and-conquer algorithm](https://doi.org/10.1109%2Feit48999.2020.9208270).
 """
-function dac_voronoi!(grid::Matrix{T}, sites::Vector{T}; distance=euclidean) where {T<:SVector{2,Int}}
+function dac_voronoi!(grid::Matrix{T}, sites::Vector{T}; distance=euclidean) where {T<:Coord}
     TL = (1, 1)
     BR = size(grid)
     _dac_voronoi!(grid, TL, BR, sites, distance=distance)
@@ -90,7 +90,7 @@ end
 Performs a divide-and-conquer method similar to `dac_voronoi!` but has an additional site-elimination
 step which aims to reduce the work of subsequent steps.
 """
-function redac_voronoi!(grid::Matrix{T}, sites::Vector{T}; distance=euclidean, auxiliary=exact_aux) where {T<:SVector{2,Int}}
+function redac_voronoi!(grid::Matrix{T}, sites::Vector{T}; distance=euclidean, auxiliary=exact_aux) where {T<:Coord}
     TL = 1, 1
     BR = size(grid)
     _redac_voronoi!(grid, TL, BR, EarlyStopper(sites); distance=distance, auxiliary=auxiliary)
@@ -101,19 +101,19 @@ end
     any(TL .> BR) && return nothing
     # Then, if the grid is a single cell then we are done
     if all(BR .== TL)
-        grid[TL...] = find_closest_site(TL, sites, distance=distance)
+        find_closest_site!(grid, TL, sites; distance=distance)
     elseif length(sites) == 1 # Same if there is a single site
         view(grid, TL[1]:BR[1], TL[2]:BR[2]) .= Ref(first(sites))
     else
         # Otherwise we check if all corners have the same closest site
         corners = get_corners(TL, BR)
-        closest_corners = (find_closest_site(corner, sites, distance=distance) for corner in corners)
+        closest_corners = (find_closest_site!(grid, corner, sites, distance=distance) for corner in corners)
         if allequal(closest_corners)
             view(grid, TL[1]:BR[1], TL[2]:BR[2]) .= Ref(first(closest_corners))
         else
             # And if not we eliminate faraway seeds from subsequent steps
             # `auxiliary` sorts sites by whether the predicate is true and stores how many are true.
-            local_sites = auxiliary(sites, TL, BR; distance=distance)
+            local_sites = auxiliary(grid, sites, TL, BR; distance=distance)
             # then divide the grid into quadrants and "conquer" each one
             for (quadrant_TL, quadrant_BR) in get_quadrants(TL, BR)
                 _redac_voronoi!(grid, quadrant_TL, quadrant_BR, local_sites; distance=distance, auxiliary=auxiliary)

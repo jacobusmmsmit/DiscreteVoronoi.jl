@@ -5,7 +5,7 @@ using BenchmarkTools
 using Random
 using Distances
 
-using DiscreteVoronoi: get_corners, voronoi_equality, exact_condition, exact_aux, centre_anchor_aux
+using DiscreteVoronoi: get_corners, voronoi_equality, exact_condition, exact_aux, centre_anchor_aux, naive_edge_aux!, dac_edge_aux!
 using DiscreteVoronoi: EarlyStopper, early_stop_sort!
 
 const Coord = SVector{2,Int}
@@ -109,7 +109,16 @@ end
         @test voronoi_equality(redac_grid_chebyshev, naive_grid_chebyshev; distance=chebyshev)
     end
 
-    @testset "Allocations" begin
+    @testset "Auxiliary function allocations" begin
+        @test @ballocated(
+            naive_edge_aux!($grid, $locs, $TL, $(BR .÷ 2)), seconds = 1.0
+        ) == 0
+        @test @ballocated(
+            dac_edge_aux!($grid, $locs, $TL, $(BR .÷ 2)), seconds = 1.0
+        ) == 0
+    end
+
+    @testset "Main function allocations" begin
         @test @ballocated(naive_voronoi!($grid, $locs), seconds = 1.0) == 0
         @test @ballocated(dac_voronoi!($grid, $locs), seconds = 1.0) == 0
         @test @ballocated(jfa_voronoi!($grid, $locs), seconds = 1.0) == 0
@@ -118,6 +127,9 @@ end
         ) == 0
         @test @ballocated(
             redac_voronoi!($grid, $locs, auxiliary=centre_anchor_aux), seconds = 1.0
+        ) == 0
+        @test @ballocated(
+            redac_voronoi!($grid, $locs, auxiliary=dac_edge_aux!), seconds = 1.0
         ) == 0
     end
 end
