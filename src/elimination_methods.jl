@@ -37,14 +37,38 @@ function exact_aux(sites, TL, BR; distance=euclidean)
     return early_stop_sort!(sites, predicate)
 end
 
-function edge_aux(sites, TL, BR)
+function edge_aux(sites, TL, BR; distance=euclidean)
     corners = get_corners(TL, BR)
     keep_per_edge = Iterators.map(1:4) do i
         j = mod(i, 4) + 1
         edge_cells = get_edge(corners[i], corners[j])
-        return Iterators.map(cell -> find_closest_site(cell, sites), edge_cells)
+        return Iterators.map(cell -> find_closest_site(cell, sites; distance=distance), edge_cells)
     end
     sites_to_keep = Iterators.flatten(keep_per_edge)
     predicate(site) = all(TL .<= site .<= BR) || site in sites_to_keep
     return early_stop_sort!(sites, predicate)
+end
+
+function dac_edge_aux(sites, TL, BR; distance=euclidean)
+    corners = get_corners(TL, BR)
+    keep_per_edge = Iterators.map(1:4) do i
+        j = mod(i, 4) + 1
+        return edge_dac(sites, corners[i], corners[j]; distance=distance)
+    end
+    sites_to_keep = Iterators.flatten(keep_per_edge)
+    predicate(site) = all(TL .<= site .<= BR) || site in sites_to_keep
+    return early_stop_sort!(sites, predicate)
+end
+
+function edge_dac(sites, a, b; distance=euclidean)
+    all(a .!= b) && throw(ArgumentError("Points $a and $b must be vertically or horizontally aligned"))
+    closest = find_closest_site.((a, b), Ref(sites); distance=distance)
+    sum(abs, a .- b) == 1 && return closest
+    if closest[1] == closest[2]
+        return Iterators.repeated(closest, sum(abs, a .- b))
+    else
+        c = (a .+ b) .÷ 2
+        d = c .+ (a[1] == b[1] ? (0, 1) : (1, 0))
+        return Iterators.flatten((edge_dac(sites, a, c), edge_dac(sites, b, d)))
+    end
 end
