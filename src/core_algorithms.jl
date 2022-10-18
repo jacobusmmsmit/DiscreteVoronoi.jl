@@ -93,7 +93,7 @@ step which aims to reduce the work of subsequent steps.
 function redac_voronoi!(grid::Matrix{T}, sites::Vector{T}; distance=euclidean, auxiliary=exact_aux) where {T<:SVector{2,Int}}
     TL = 1, 1
     BR = size(grid)
-    _redac_voronoi!(grid, TL, BR, EarlyStopper(sites); distance=distance, auxiliary=exact_aux)
+    _redac_voronoi!(grid, TL, BR, EarlyStopper(sites); distance=distance, auxiliary=auxiliary)
     return nothing
 end
 
