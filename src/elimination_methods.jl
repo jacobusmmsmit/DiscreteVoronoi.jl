@@ -39,8 +39,8 @@ end
 
 function naive_edge_aux!(grid, sites, TL, BR; distance=euclidean)
     corners = get_corners(TL, BR)
-    coordinates = (CartesianIndex(corners[a]...):CartesianIndex(corners[b]...) for (a, b) in zip((1, 1, 2, 4), (2, 4, 3, 3)))
-    sites_to_keep = (find_closest_site!(grid, Coord(Tuple(I)), sites; distance=distance) for I in coordinates)
+    edges = (CartesianIndex(corners[a]...):CartesianIndex(corners[b]...) for (a, b) in zip((1, 1, 2, 4), (2, 4, 3, 3)))
+    sites_to_keep = (find_closest_site!(grid, Coord(Tuple(I)), sites; distance=distance) for I in edge for edge in edges)
     predicate(site) = all(TL .<= site .<= BR) || site in sites_to_keep
     return early_stop_sort!(sites, predicate)
 end
@@ -62,6 +62,6 @@ function edge_dac!(grid, sites, a, b; distance=euclidean)
     else
         c = (a .+ b) .÷ 2
         d = c .+ (a[1] == b[1] ? (0, 1) : (1, 0))
-        return Iterators.flatten(edge_dac!(grid, sites, a, c), edge_dac!(grid, sites, b, d))
+        return (edge_dac!(grid, sites, a, c), edge_dac!(grid, sites, b, d))
     end
 end
