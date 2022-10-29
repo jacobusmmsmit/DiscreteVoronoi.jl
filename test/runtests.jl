@@ -4,6 +4,7 @@ using Test
 using BenchmarkTools
 using Random
 using Distances
+using Distributions
 
 using DiscreteVoronoi: get_corners, voronoi_equality, exact_condition, exact_aux, centre_anchor_aux
 using DiscreteVoronoi: EarlyStopper, early_stop_sort!
@@ -14,7 +15,7 @@ function random_coordinates(N, K)
     Coord.(shuffle!([Iterators.product(1:N, 1:N)...])[1:K])
 end
 
-@testset "Elimination methods" begin
+#= @testset "Elimination methods" begin
     # Setup: a grid with sites on and directly around each corner.
     # Expected result: after exact elimination, we should see only the sites inside the grid.
     function sites_on_and_around(coord)
@@ -119,5 +120,55 @@ end
         @test @ballocated(
             redac_voronoi!($grid, $locs, auxiliary=centre_anchor_aux), seconds = 1.0
         ) == 0
+    end
+end =#
+
+function rand_points(::Type{Int}, N, M, K)
+    Coord.(shuffle!([Iterators.product(1:N, 1:M)...])[1:min(M * N, K)])
+end
+
+function rand_sites(::Type{Int}, N, M, K)
+    [(color, point) for (color, point) in enumerate(rand_points(Int, N, M, K))]
+end
+
+function rand_points(::Type{T}, N, M, K) where {T<:AbstractFloat}
+    [(rand(Uniform(0, N)), rand(Uniform(0, M))) for k in 1:min(M * N, K)]
+end
+
+function rand_sites(::Type{T}, N, M, K) where {T<:AbstractFloat}
+    [(color, point) for (color, point) in enumerate(rand_points(T, N, M, K))]
+end
+
+const REPETITIONS = 100
+
+@testset "jfa_voronoi! working for Int sites" begin
+    Random.seed!(42)
+    for distance in [cityblock, euclidean, chebyshev]
+        for i in 1:REPETITIONS
+            N, M = rand(1:100, 2)
+            points = rand_points(Int, N, M, rand(1:100))
+
+            # grid1 = zeros(Coord, (N, M))
+            # naive_voronoi!(grid1, points, distance=distance)
+            grid2 = zeros(Coord, (N, M))
+            jfa_voronoi!(grid2, points, distance=distance)
+            @test !any(==(0), grid2) 
+        end
+    end
+end
+
+@testset "dac_voronoi! matching results for Int sites" begin
+    Random.seed!(42)
+    for distance in [cityblock, euclidean, chebyshev]
+        for i in 1:REPETITIONS
+            N, M = rand(1:100, 2)
+            points = rand_points(Int, N, M, rand(1:100))
+
+            grid1 = zeros(Coord, (N, M))
+            naive_voronoi!(grid1, points, distance=distance)
+            grid2 = zeros(Coord, (N, M))
+            dac_voronoi!(grid2, points, distance=distance)
+            @test grid2 == grid1
+        end
     end
 end
