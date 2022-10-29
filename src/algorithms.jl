@@ -1,25 +1,46 @@
+using Distances
 using Polyester
 
-export naive_voronoi, jfa!, jfa_par!, dac_aux!, dac!, dacx!
+export naive_voronoi
+export preset_voronoi!, preset_voronoi_rounded!
+export jfa_voronoi!, jfa_voronoi_parallel!
+export original_site_find
+export center_site_find, center_site_filter, center_site_filter!
+export anchor_site_filter, anchor_site_filter!
+export dac_voronoi!, redac_voronoi!, redac_voronoi_optimized!
 
-naive_voronoi(grid, sites, p::Real=2) = map(cell -> findmin(site -> distance(cell, site, p), sites)[2], grid)
+naive_voronoi(grid, sites, distance=euclidean) = map(cell -> findmin(site -> distance(cell, site), sites)[2], grid)
 
-function jfa!(grid, sites, p::Real=2)
-    for (color, (x, y)) in enumerate(sites)
+function preset_voronoi!(grid, sites)
+    for (color, point) in sites
+        if 1 <= point[1] <= size(grid, 1) && 1 <= point[2] <= size(grid, 2)
+            grid[point...] = convert(eltype(grid), color)
+        end
+    end
+    grid
+end
+
+function preset_voronoi_rounded!(grid, sites)
+    for (color, point) in sites
+        closest_point = round_tuple(point)
+        if 1 <= closest_point[1] <= size(grid, 1) && 1 <= closest_point[2] <= size(grid, 2)
+            grid[closest_point...] = convert(eltype(grid), color)
+        end
+    end
+    grid
+end
+
+function jfa_voronoi!(grid, points, distance=euclidean)
+    for (color, (x, y)) in enumerate(points)
         grid[x, y] = convert(eltype(grid), color)
     end
     k = max(size(grid)...)
     while k > 1
         k = k ÷ 2 + k % 2
-        @inbounds for y in 1:size(grid, 2), x in 1:size(grid, 1)
+        @inbounds for y in axes(grid, 2), x in axes(grid, 1)
             for j in (-k, 0, k), i in (-k, 0, k)
-                checkbounds(Bool, grid, x + i, y + j) || continue
-                colorq = grid[x + i, y + j]
-                colorq !== 0 || continue
-                colorp = grid[x, y]
-                if colorp === 0
-                    grid[x, y] = colorq
-                elseif distance(sites[colorp], (x, y), p) > distance(sites[colorq], (x, y), p)
+                ((i !== 0 || j !== 0) && checkbounds(Bool, grid, x + i, y + j) && (colorq = grid[x + i, y + j]) !== 0) || continue
+                if (colorp = grid[x, y]) === 0 || distance(points[colorp], (x, y)) > distance(points[colorq], (x, y))
                     grid[x, y] = colorq
                 end
             end
@@ -28,23 +49,18 @@ function jfa!(grid, sites, p::Real=2)
     return grid
 end
 
-function jfa_par!(grid, sites, p::Real=2)
-    for (color, (x, y)) in enumerate(sites)
+function jfa_voronoi_parallel!(grid, points, distance=euclidean)
+    for (color, (x, y)) in enumerate(points)
         grid[x, y] = convert(eltype(grid), color)
     end
     gridp = copy(grid)
     k = max(size(grid)...)
     while k > 1
         k = k ÷ 2 + k % 2
-        @inbounds @batch for y in 1:size(grid, 2), x in 1:size(grid, 1)
+        @inbounds @batch for y in axes(grid, 2), x in axes(grid, 1)
             for j in (-k, 0, k), i in (-k, 0, k)
-                checkbounds(Bool, grid, x + i, y + j) || continue
-                colorq = grid[x + i, y + j]
-                colorq !== 0 || continue
-                colorp = grid[x, y]
-                if colorp === 0
-                    gridp[x, y] = colorq
-                elseif distance(sites[colorp], (x, y), p) > distance(sites[colorq], (x, y), p)
+                ((i !== 0 || j !== 0) && checkbounds(Bool, grid, x + i, y + j) && (colorq = grid[x + i, y + j]) !== 0) || continue
+                if (colorp = grid[x, y]) === 0 || distance(points[colorp], (x, y)) > distance(points[colorq], (x, y))
                     gridp[x, y] = colorq
                 end
             end
@@ -54,53 +70,165 @@ function jfa_par!(grid, sites, p::Real=2)
     return grid
 end
 
-@inbounds function dac_aux!(grid, sites, p, depth, rect)
-    (t, l), (N, M) = rect
-    if all(>(0), (N, M)) && any(==(0), @view grid[t:t+N-1, l:l+M-1])
-        dac!(grid, sites, p, depth - 1, rect)
+@inbounds function conquer_base_cases!(grid, sites, rect, distance)
+    (t, l), (b, r) = rect
+    all(!=(0), @view grid[t:b, l:r]) && return true
+    if length(sites) == 1
+        grid[t:b, l:r] .= convert(eltype(grid), sites[1][1])
+        return true
+    end
+    if t == b && l == r
+        _, min_color = _findmin(sites) do site
+            distance((t, l), site[2])
+        end
+        grid[t, l] = convert(eltype(grid), sites[min_color][1])
+        return true
+    end
+    return false
+end
+
+@inbounds function original_site_find(grid, sites, rect, distance)
+    conquer_base_cases!(grid, sites, rect, distance) && return true
+    color = 0
+    corners = get_corners(rect)
+    for corner in corners
+        min_dist, min_color = _findmin(sites) do site
+            distance(corner, site[2])
+        end
+        dist = _minimum(point for (color, point) in sites if color != min_color) do point
+            distance(corner, point)
+        end
+        dist > min_dist || return false
+        color == 0 && (color = min_color)
+        min_color == color || return false
+    end
+    (t, l), (b, r) = rect
+    grid[t:b, l:r] .= convert(eltype(grid), sites[color][1])
+    return true
+end
+
+@inbounds function center_site_find(grid, sites, rect, distance)
+    conquer_base_cases!(grid, sites, rect, distance) && return true
+    center = get_center(rect)
+    min_dist, min_color = _findmin(sites) do site
+        distance(center, site[2])
+    end
+    dist = _minimum(point for (color, point) in sites if color != min_color) do point
+        distance(center, point)
+    end
+    (t, l), (b, r) = rect
+    max_dist = min_dist + distance((b, r), (t, l)) + 1
+    if dist > max_dist
+        grid[t:b, l:r] .= convert(eltype(grid), sites[min_color][1])
+        return true
+    end
+    return false
+end
+
+@inbounds function dac_voronoi!(grid, sites, conquer, distance=euclidean, depth::Int=1, rect=((1,1), size(grid)))
+    if !conquer(grid, sites, rect, distance)
+        quadrants = get_quadrants(rect)
+        if depth > 0
+            Threads.@threads for quadrant in quadrants
+                dac_voronoi!(grid, sites, conquer, distance, depth - 1, quadrant)
+            end
+        else
+            for quadrant in quadrants
+                dac_voronoi!(grid, sites, conquer, distance, depth - 1, quadrant)
+            end
+        end
     end
     return grid
 end
 
-@inbounds function dac!(grid, sites, p::Real = 2, depth::Int = 1, rect = ((1,1), size(grid)))
-    (t, l), (N, M) = rect
-    center = (t+(N-1)/2, l+(M-1)/2) 
-    if (N == 1 && M == 1) || length(sites) == 1
-        _, min_index = findmin(site -> distance(center, site, p), sites)
-        (@view grid[t:t+N-1, l:l+M-1]) .= convert(eltype(grid), min_index)
-    else
-        min_dist, min_index = findmin(site -> distance(center, site, p), sites)
-        dist, _ = findmin(site -> distance(center, site, p), @view sites[1:end .!= min_index])
-        if dist > min_dist + distance((1, 1), (N, M), p) + 1
-            (@view grid[t:t+N-1, l:l+M-1]) .= convert(eltype(grid), min_index)
-        else
-            Nd = N ÷ 2 + N % 2
-            Md = M ÷ 2 + M % 2
-            tl_rect = (t, l), (Nd, Md)
-            bl_rect = (t+Nd, l), (N-Nd, Md)
-            tr_rect = (t, l+Md), (Nd, M-Md)
-            br_rect = (t+Nd, l+Md), (N-Nd, M-Md)
-            sub_rects = (tl_rect, bl_rect, tr_rect, br_rect)
-            if depth > 0
-                Threads.@threads for i in 1:4
-                    dac_aux!(grid, sites, p, depth, sub_rects[i])
-                end
-            else
-                for i in 1:4
-                    dac_aux!(grid, sites, p, depth, sub_rects[i])
-                end
-            end
-        end
-        return grid
+@inbounds function center_site_filter(grid, sites, rect, distance)
+    conquer_base_cases!(grid, sites, rect, distance) && return true, ()
+    center = get_center(rect)
+    min_dist = _minimum(sites) do site
+        distance(center, site[2])
     end
+    (t, l), (b, r) = rect
+    max_dist = min_dist + distance((b, r), (t, l)) + 1
+    return false, collect(_filter(sites) do site
+        distance(center, site[2]) <= max_dist
+    end)
 end
 
-function dacx!(grid, sites, p::Real=2, depth::Int=1)
-    for (color, point) in enumerate(sites)
-        closest_point = round_tuple(point)
-        if 1 <= closest_point[1] <= size(grid, 1) && 1 <= closest_point[2] <= size(grid, 2)
-            grid[closest_point...] = convert(eltype(grid), color)
+@inbounds function anchor_site_filter(grid, sites, rect, distance)
+    conquer_base_cases!(grid, sites, rect, distance) && return true, ()
+    center = get_center(rect)
+    _, min_color = _findmin(sites) do site
+        distance(center, site[2])
+    end
+    corners = get_corners(rect)
+    return false, collect(_filter(sites) do site
+        _any(corners) do corner
+            distance(corner, site[2]) <= distance(corner, sites[min_color][2])
+        end
+    end)
+end
+
+@inbounds function redac_voronoi!(grid, sites, conquer, distance=euclidean, depth::Int=1, rect=((1, 1), size(grid)))
+    conquered, sites = conquer(grid, sites, rect, distance)
+    if !conquered
+        quadrants = get_quadrants(rect)
+        if depth > 0
+            Threads.@threads for quadrant in quadrants
+                redac_voronoi!(grid, sites, conquer, distance, depth - 1, quadrant)
+            end
+        else
+            for quadrant in quadrants
+                redac_voronoi!(grid, sites, conquer, distance, depth - 1, quadrant)
+            end
         end
     end
-    dac!(grid, sites, p, depth)
+    grid
+end
+
+@inbounds function center_site_filter!(grid, sites, rect, distance, stack)
+    conquer_base_cases!(grid, sites, rect, distance) && return true
+    center = get_center(rect)
+    min_dist = _minimum(sites) do site
+        distance(center, site[2])
+    end
+    (t, l), (b, r) = rect
+    max_dist = min_dist + distance((b, r), (t, l)) + 1
+    set_sites!(stack, _filter(sites) do site
+        distance(center, site[2]) <= max_dist
+    end)
+    return false
+end
+
+@inbounds function anchor_site_filter!(grid, sites, rect, distance, stack)
+    conquer_base_cases!(grid, sites, rect, distance) && return true
+    center = get_center(rect)
+    _, min_color = _findmin(sites) do site
+        distance(center, site[2])
+    end
+    corners = get_corners(rect)
+    set_sites!(stack, _filter(sites) do site
+        _any(corners) do corner
+            distance(corner, site[2]) <= distance(corner, sites[min_color][2])
+        end
+    end)
+    return false
+end
+
+@inbounds function redac_voronoi_optimized!(grid, sites, conquer!, distance=euclidean, depth::Int=1, rect=((1, 1), size(grid)), stack=SiteStack{eltype(sites)}())
+    push_empty!(stack)
+    if !conquer!(grid, sites, rect, distance, stack)
+        sites = get_sites(stack)
+        quadrants = get_quadrants(rect)
+        if depth > 0
+            Threads.@threads for quadrant in quadrants
+                redac_voronoi_optimized!(grid, sites, conquer!, distance, depth - 1, quadrant, SiteStack{eltype(sites)}())
+            end
+        else
+            for quadrant in quadrants
+                redac_voronoi_optimized!(grid, sites, conquer!, distance, depth - 1, quadrant, stack)
+            end
+        end
+    end
+    pop!(stack)
+    grid
 end

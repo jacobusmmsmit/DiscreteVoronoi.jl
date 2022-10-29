@@ -1,191 +1,174 @@
-include("../src/DiscreteVoronoi.jl")
-using .DiscreteVoronoi
+using DiscreteVoronoi
+using Distances
 using Test
 using Random
-using Distributions
 
-const REPETITIONS = 10
+const REPETITIONS = 100
 
-function rand_sites(::Type{Int}, N, M, K)
-    idx = collect(Iterators.product(1:N, 1:M))
-    shuffle!(idx)
-    idx[1:K]
-end
-
-function rand_sites(::Type{T}, N, M, K) where {T<:AbstractFloat}
-    [(rand(Uniform(0, N)), rand(Uniform(0, M))) for k in 1:K]
-end
-
-@testset "jfa! working for Int sites" begin
+@testset "jfa_voronoi! working for Int sites" begin
     Random.seed!(42)
-    for p in [1, 2, Inf]
+    for distance in [cityblock, euclidean, chebyshev]
         for i in 1:REPETITIONS
-            N, M = rand(1:1000, 2)
-            sites = collect(enumerate(rand_sites(Int, N, M, rand(1:100))))
+            N, M = rand(1:100, 2)
+            points = rand_points(Int, N, M, rand(1:100))
 
-            grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites), p)
+            # grid1 = naive_voronoi(Tuple.(CartesianIndices((1:N, 1:M))), points, distance)
             grid2 = zeros(Int, N, M)
-            @test !any(==(0), jfa!(grid2, map(site -> site[2], sites), p)) 
+            @test !any(==(0), jfa_voronoi!(grid2, points, distance)) 
         end
     end
 end
 
-@testset "jfa_par! working for Int sites" begin
+@testset "jfa_voronoi_parallel! working for Int sites" begin
     Random.seed!(42)
-    for p in [1, 2, Inf]
+    for distance in [cityblock, euclidean, chebyshev]
         for i in 1:REPETITIONS
-            N, M = rand(1:1000, 2)
-            sites = collect(enumerate(rand_sites(Int, N, M, rand(1:100))))
+            N, M = rand(1:100, 2)
+            points = rand_points(Int, N, M, rand(1:100))
 
-            grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites), p)
+            # grid1 = naive_voronoi(Tuple.(CartesianIndices((1:N, 1:M))), points, distance)
             grid2 = zeros(Int, N, M)
-            @test !any(==(0), jfa_par!(grid2, map(site -> site[2], sites), p))
+            @test !any(==(0), jfa_voronoi_parallel!(grid2, points, distance)) 
         end
     end
 end
 
-
-@testset "dac! matching results for Int sites" begin
+@testset "dac_voronoi! matching results for Int sites" begin
     Random.seed!(42)
-    for p in [1, 2, Inf]
+    for distance in [cityblock, euclidean, chebyshev]
         for i in 1:REPETITIONS
-            N, M = rand(1:1000, 2)
-            sites = collect(enumerate(rand_sites(Int, N, M, rand(1:100))))
+            N, M = rand(1:100, 2)
+            sites = rand_sites(Int, N, M, rand(1:100))
 
-            grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites), p)
-            grid2 = zeros(Int, N, M)
-            dac!(grid2, map(site -> site[2], sites), p)
-            @test grid2 == grid1
-        end
-    end
-end
-
-@testset "dac! matching results for Float64 sites" begin
-    Random.seed!(42)
-    for p in [1, 2, Inf]
-        for i in 1:REPETITIONS
-            N, M = rand(1:1000, 2)
-            sites = collect(enumerate(rand_sites(Float64, N, M, rand(1:100))))
-
-            grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites), p)
-            grid2 = zeros(Int, N, M)
-            dac!(grid2, map(site -> site[2], sites), p)
-            @test grid2 == grid1
-        end
-    end
-end
-
-@testset "dacx! matching results for Int sites" begin
-    Random.seed!(42)
-    for p in [1, 2, Inf]
-        for i in 1:REPETITIONS
-            N, M = rand(1:1000, 2)
-            sites = collect(enumerate(rand_sites(Int, N, M, rand(1:100))))
-
-            grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites), p)
-            grid2 = zeros(Int, N, M)
-            dacx!(grid2, map(site -> site[2], sites), p)
-            @test grid2 == grid1
-        end
-    end
-end
-
-@testset "dacx! working for Float64 sites" begin
-    Random.seed!(42)
-    for p in [1, 2, Inf]
-        for i in 1:REPETITIONS
-            N, M = rand(1:1000, 2)
-            sites = collect(enumerate(rand_sites(Float64, N, M, rand(1:100))))
-
-            grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites), p)
-            grid2 = zeros(Int, N, M)
-            @test !any(==(0), dacx!(grid2, map(site -> site[2], sites), p))
-        end
-    end
-end
-
-@testset "jdac! matching results for Int sites" begin
-    Random.seed!(42)
-    for p in [1, 2, Inf]
-        for i in 1:REPETITIONS
-            N, M = rand(1:1000, 2)
-            sites = collect(enumerate(rand_sites(Int, N, M, rand(1:100))))
-
-            grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites), p)
-            for aux! in [jdac_aux0!, 
-                         jdac_aux1a!, jdac_aux1b!, jdac_aux1c!, 
-                         jdac_aux2a!, jdac_aux2b!, jdac_aux2c!, 
-                         jdac_aux3a!, jdac_aux3b!, jdac_aux3c!, 
-                         jdac_aux4a!, jdac_aux4c!, 
-                         jdac_aux5a!, jdac_aux5c!]
-                grid2 = zeros(Int, N, M)
-                jdac!(grid2, sites, aux!, p)
-                @test grid2 == grid1
+            grid1 = naive_voronoi(Tuple.(CartesianIndices((1:N, 1:M))), map(site -> site[2], sites), distance)
+            for site_find in [original_site_find, center_site_find]
+                grid2 = preset_voronoi!(zeros(Int, N, M), sites)
+                @test dac_voronoi!(grid2, sites, site_find, distance) == grid1
             end
         end
     end
 end
 
-@testset "jdac! matching results for Float64 sites" begin
+@testset "dac_voronoi! matching results for Float64 sites" begin
     Random.seed!(42)
-    for p in [1, 2, Inf]
+    for distance in [cityblock, euclidean, chebyshev]
         for i in 1:REPETITIONS
-            N, M = rand(1:1000, 2)
-            sites = collect(enumerate(rand_sites(Float64, N, M, rand(1:100))))
+            N, M = rand(1:100, 2)
+            sites = rand_sites(Float64, N, M, rand(1:100))
 
-            grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites), p)
-            for aux! in [jdac_aux0!, 
-                         jdac_aux1a!, jdac_aux1b!, jdac_aux1c!, 
-                         jdac_aux2a!, jdac_aux2b!, jdac_aux2c!, 
-                         jdac_aux3a!, jdac_aux3b!, jdac_aux3c!, 
-                         jdac_aux4a!, jdac_aux4c!, 
-                         jdac_aux5a!, jdac_aux5c!]
+            grid1 = naive_voronoi(Tuple.(CartesianIndices((1:N, 1:M))), map(site -> site[2], sites), distance)
+            for site_find in [original_site_find, center_site_find]
                 grid2 = zeros(Int, N, M)
-                jdac!(grid2, sites, aux!, p)
-                @test grid2 == grid1
+                @test dac_voronoi!(grid2, sites, site_find, distance) == grid1
             end
         end
     end
 end
 
-@testset "jdacx! matching results for Int sites" begin
+@testset "dac_voronoi! working for Float64 sites" begin
     Random.seed!(42)
-    for p in [1, 2, Inf]
+    for distance in [cityblock, euclidean, chebyshev]
         for i in 1:REPETITIONS
-            N, M = rand(1:1000, 2)
-            sites = collect(enumerate(rand_sites(Int, N, M, rand(1:100))))
+            N, M = rand(1:100, 2)
+            sites = rand_sites(Float64, N, M, rand(1:100))
 
-            grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites), p)
-            for aux! in [jdac_aux0!, 
-                         jdac_aux1a!, jdac_aux1b!, jdac_aux1c!, 
-                         jdac_aux2a!, jdac_aux2b!, jdac_aux2c!, 
-                         jdac_aux3a!, jdac_aux3b!, jdac_aux3c!, 
-                         jdac_aux4a!, jdac_aux4c!, 
-                         jdac_aux5a!, jdac_aux5c!]
-                grid2 = zeros(Int, N, M)
-                jdacx!(grid2, sites, aux!, p)
-                @test grid2 == grid1
+            for site_find in [original_site_find, center_site_find]
+                grid = preset_voronoi_rounded!(zeros(Int, N, M), sites)
+                @test !any(==(0), dac_voronoi!(grid, sites, site_find, distance))
+            end
+         end
+    end
+end
+
+@testset "redac_voronoi! matching results for Int sites" begin
+    Random.seed!(42)
+    for distance in [cityblock, euclidean, chebyshev]
+        for i in 1:REPETITIONS
+            N, M = rand(1:100, 2)
+            sites = rand_sites(Int, N, M, rand(1:100))
+
+            grid1 = naive_voronoi(Tuple.(CartesianIndices((1:N, 1:M))), map(site -> site[2], sites), distance)
+            for site_filter in [center_site_filter, anchor_site_filter]
+                grid2 = preset_voronoi!(zeros(Int, N, M), sites)
+                @test redac_voronoi!(grid2, sites, site_filter, distance) == grid1
             end
         end
     end
 end
 
-@testset "jdacx! working for Float64 sites" begin
+@testset "redac_voronoi! matching results for Float64 sites" begin
     Random.seed!(42)
-    for p in [1, 2, Inf]
+    for distance in [cityblock, euclidean, chebyshev]
         for i in 1:REPETITIONS
-            N, M = rand(1:1000, 2)
-            sites = collect(enumerate(rand_sites(Float64, N, M, rand(1:100))))
+            N, M = rand(1:100, 2)
+            sites = rand_sites(Float64, N, M, rand(1:100))
 
-            grid1 = naive_voronoi(CartesianIndices((1:N, 1:M)), map(site -> site[2], sites), p)
-            for aux! in [jdac_aux0!, 
-                         jdac_aux1a!, jdac_aux1b!, jdac_aux1c!, 
-                         jdac_aux2a!, jdac_aux2b!, jdac_aux2c!, 
-                         jdac_aux3a!, jdac_aux3b!, jdac_aux3c!, 
-                         jdac_aux4a!, jdac_aux4c!, 
-                         jdac_aux5a!, jdac_aux5c!]
+            grid1 = naive_voronoi(Tuple.(CartesianIndices((1:N, 1:M))), map(site -> site[2], sites), distance)
+            for site_filter in [center_site_filter, anchor_site_filter]
                 grid2 = zeros(Int, N, M)
-                @test !any(==(0), jdacx!(grid2, sites, aux!, p))
+                @test redac_voronoi!(grid2, sites, site_filter, distance) == grid1
+            end
+        end
+    end
+end
+
+@testset "redac_voronoi! working for Float64 sites" begin
+    Random.seed!(42)
+    for distance in [cityblock, euclidean, chebyshev]
+        for i in 1:REPETITIONS
+            N, M = rand(1:100, 2)
+            sites = rand_sites(Float64, N, M, rand(1:100))
+
+            for site_filter in [center_site_filter, anchor_site_filter]
+                grid = preset_voronoi_rounded!(zeros(Int, N, M), sites)
+                @test !any(==(0), redac_voronoi!(grid, sites, site_filter, distance))
+            end
+        end
+    end
+end
+
+@testset "redac_voronoi_optimized! matching results for Int sites" begin
+    Random.seed!(42)
+    for distance in [cityblock, euclidean, chebyshev]
+        for i in 1:REPETITIONS
+            N, M = rand(1:100, 2)
+            sites = rand_sites(Int, N, M, rand(1:100))
+
+            grid1 = naive_voronoi(Tuple.(CartesianIndices((1:N, 1:M))), map(site -> site[2], sites), distance)
+            for site_filter! in [center_site_filter!, anchor_site_filter!]
+                grid2 = preset_voronoi!(zeros(Int, N, M), sites)
+                @test redac_voronoi_optimized!(grid2, sites, site_filter!, distance) == grid1
+            end
+        end
+    end
+end
+
+@testset "redac_voronoi_optimized! matching results for Float64 sites" begin
+    Random.seed!(42)
+    for distance in [cityblock, euclidean, chebyshev]
+        for i in 1:REPETITIONS
+            N, M = rand(1:100, 2)
+            sites = rand_sites(Float64, N, M, rand(1:100))
+
+            grid1 = naive_voronoi(Tuple.(CartesianIndices((1:N, 1:M))), map(site -> site[2], sites), distance)
+            for site_filter! in [center_site_filter!, anchor_site_filter!]
+                grid2 = zeros(Int, N, M)
+                @test redac_voronoi_optimized!(grid2, sites, site_filter!, distance) == grid1
+            end
+        end
+    end
+end
+
+@testset "redac_voronoi_optimized! working for Float64 sites" begin
+    Random.seed!(42)
+    for distance in [cityblock, euclidean, chebyshev]
+        for i in 1:REPETITIONS
+            N, M = rand(1:100, 2)
+            sites = rand_sites(Float64, N, M, rand(1:100))
+
+            for site_filter! in [center_site_filter!, anchor_site_filter!]
+                grid = preset_voronoi_rounded!(zeros(Int, N, M), sites)
+                @test !any(==(0), redac_voronoi_optimized!(grid, sites, site_filter!, distance))
             end
         end
     end
