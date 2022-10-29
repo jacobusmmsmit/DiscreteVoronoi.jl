@@ -1,13 +1,6 @@
-include("../src/DiscreteVoronoi.jl")
-using .DiscreteVoronoi
+using DiscreteVoronoi
 using Random
 using BenchmarkTools
-
-function rand_sites(::Type{Int}, N, M, K)
-    idx = collect(Iterators.product(1:N, 1:M))
-    shuffle!(idx)
-    idx[1:K]
-end
 
 const SUITE = BenchmarkGroup()
 
@@ -16,18 +9,17 @@ for n in [10, 100, 1000]
     for s in [isqrt(n), n, n * isqrt(n), n * n]
         SUITE[string("grid ", n, "x", n)][string(s, " sites")] = BenchmarkGroup()
 
-        SUITE[string("grid ", n, "x", n)][string(s, " sites")]["jfa!"] = @benchmarkable jfa!(grid, sites) setup = (
-            Random.seed!(42);
-            grid = zeros(Int, $n, $n);
-            sites = rand_sites(Int, size(grid)..., $s))
+        SUITE[string("grid ", n, "x", n)][string(s, " sites")]["jfa_voronoi!"] = @benchmarkable jfa_voronoi!(grid, points) setup=(
+            Random.seed!(42);            
+            points = rand_points(Int, $n, $n, $s);
+            grid = zeros(Int, $n, $n)) evals=1
 
-        for aux! in [jdac_aux1a!, jdac_aux1b!, jdac_aux1c!, jdac_aux2a!, jdac_aux2b!, jdac_aux2c!, jdac_aux3a!, jdac_aux3b!, jdac_aux3c!, jdac_aux4a!, jdac_aux4c!, jdac_aux5a!, jdac_aux5c!]
-            SUITE[string("grid ", n, "x", n)][string(s, " sites")][aux!] = @benchmarkable jdacx!(grid, sites, $aux!) setup = (
+        for site_filter in [center_site_filter, anchor_site_filter]
+            SUITE[string("grid ", n, "x", n)][string(s, " sites")][site_filter] = @benchmarkable redac_voronoi!(grid, sites, site_filter) setup=(
                 Random.seed!(42);
-                grid = zeros(Int, $n, $n);
-                sites = collect(enumerate(rand_sites(Int, size(grid)..., $s))))
+                sites = rand_sites(Int, $n, $n, $s);
+                grid = preset_voronoi!(zeros(Int, $n, $n), sites);
+                site_filter = $site_filter) evals=1
         end
     end
 end
-
-run(SUITE)

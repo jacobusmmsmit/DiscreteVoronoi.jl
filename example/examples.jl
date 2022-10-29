@@ -1,29 +1,22 @@
-include("../src/DiscreteVoronoi.jl")
-using .DiscreteVoronoi
+using DiscreteVoronoi
 using Random
-using BenchmarkTools
+using Plots
 
-function rand_sites(::Type{Int}, N, M, K)
-    idx = collect(Iterators.product(1:N, 1:M))
-    shuffle!(idx)
-    idx[1:K]
-end
-
+Random.seed!(42)
+grid = zeros(Int, rand(1:100), rand(1:100))
+sites = rand_points(Int, size(grid)..., 10)
+jfa_voronoi!(grid, sites)
+heatmap(grid)
 
 Random.seed!(42)
 grid = zeros(Int, rand(1:100), rand(1:100))
 sites = rand_sites(Int, size(grid)..., 10)
-jfa!(grid, sites)
-@show grid
+dac_voronoi!(grid, sites, original_site_find)
+heatmap(grid)
 
 Random.seed!(42)
 grid = zeros(Int, rand(1:100), rand(1:100))
 sites = rand_sites(Int, size(grid)..., 10)
-dac!(grid, sites)
-@show grid
+redac_voronoi!(grid, sites, anchor_site_filter)
+heatmap(grid)
 
-Random.seed!(42)
-grid = zeros(Int, rand(1:100), rand(1:100))
-sites = collect(enumerate(rand_sites(Int, size(grid)..., 10)))
-jdac!(grid, sites, jdac_aux1a!)
-@show grid
