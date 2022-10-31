@@ -32,7 +32,7 @@ end
     return grid
 end
 
-@inbounds function naive_voronoi!(grid, points, distance=euclidean) 
+@inbounds function naive_voronoi!(grid, points, distance=euclidean)
     for y in axes(grid, 2), x in axes(grid, 1)
         _, min_color = _findmin(points) do point
             distance((x, y), point)

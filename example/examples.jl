@@ -1,5 +1,4 @@
 using DiscreteVoronoi
-using Distances
 using Random
 using Plots
 
@@ -20,4 +19,3 @@ grid = zeros(Int, rand(1:100), rand(1:100))
 sites = rand_sites(Int, size(grid)..., 10)
 redac_voronoi!(grid, sites, corner_site_filter)
 heatmap(grid)
-

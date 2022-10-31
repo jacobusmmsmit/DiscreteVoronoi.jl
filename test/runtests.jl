@@ -15,7 +15,7 @@ const REPETITIONS = 100
             # grid1 = zeros(Int, N, M)
             # naive_voronoi!(grid1, points, distance)
             grid2 = zeros(Int, N, M)
-            @test !any(==(0), jfa_voronoi!(grid2, points, distance)) 
+            @test !any(==(0), jfa_voronoi!(grid2, points, distance))
         end
     end
 end
@@ -30,7 +30,7 @@ end
             # grid1 = zeros(Int, N, M)
             # naive_voronoi!(grid1, points, distance)
             grid2 = zeros(Int, N, M)
-            @test !any(==(0), jfa_voronoi_parallel!(grid2, points, distance)) 
+            @test !any(==(0), jfa_voronoi_parallel!(grid2, points, distance))
         end
     end
 end

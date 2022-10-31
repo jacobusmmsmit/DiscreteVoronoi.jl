@@ -90,8 +90,8 @@ end
 
 function get_edges(rect)
     (t, l), (b, r) = rect
-    (((t, j) for j in l:r)..., 
-     ((i, r) for i in t:b)..., 
+    (((t, j) for j in l:r)...,
+     ((i, r) for i in t:b)...,
      ((b, j) for j in l:r)...,
      ((i, l) for i in t:b)...)
 end
