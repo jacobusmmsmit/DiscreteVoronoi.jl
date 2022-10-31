@@ -88,6 +88,14 @@ function get_corners(rect)
     (t, l), (t, r), (b, r), (b, l)
 end
 
+function get_edges(rect)
+    (t, l), (b, r) = rect
+    (((t, j) for j in l:r)...,
+     ((i, r) for i in t:b)...,
+     ((b, j) for j in l:r)...,
+     ((i, l) for i in t:b)...)
+end
+
 function get_quadrants(rect)
     (t, l), (b, r) = rect
     Nd = (b - t) ÷ 2

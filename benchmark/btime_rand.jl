@@ -32,7 +32,7 @@ for n in [100, 1000]
         end
 
         println("redac_voronoi!")
-        for site_filter in [center_site_filter, anchor_site_filter]
+        for site_filter in [naive_site_filter, center_site_filter, anchor_site_filter, corner_site_filter]
             @show site_filter
             @btime redac_voronoi!(grid, sites, site_filter) setup=(
                 Random.seed!(42);
@@ -42,7 +42,7 @@ for n in [100, 1000]
         end
 
         println("redac_voronoi_optimized!")
-        for site_filter! in [center_site_filter!, anchor_site_filter!]
+        for site_filter! in [naive_site_filter!, center_site_filter!, anchor_site_filter!, corner_site_filter!]
             @show site_filter!
             @btime redac_voronoi_optimized!(grid, sites, site_filter!) setup=(
                 Random.seed!(42);
