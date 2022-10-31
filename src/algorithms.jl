@@ -1,43 +1,55 @@
 using Distances
 using Polyester
 
-export naive_voronoi
 export preset_voronoi!, preset_voronoi_rounded!
+export naive_voronoi!
 export jfa_voronoi!, jfa_voronoi_parallel!
-export original_site_find
-export center_site_find, center_site_filter, center_site_filter!
+export original_site_find, center_site_find
+export dac_voronoi!
+export naive_site_filter, naive_site_filter!
+export center_site_filter, center_site_filter!
 export anchor_site_filter, anchor_site_filter!
-export dac_voronoi!, redac_voronoi!, redac_voronoi_optimized!
+export corner_site_filter, corner_site_filter!
+export edge_site_filter, edge_site_filter!
+export redac_voronoi!, redac_voronoi_optimized!
 
-naive_voronoi(grid, sites, distance=euclidean) = map(cell -> findmin(site -> distance(cell, site), sites)[2], grid)
-
-function preset_voronoi!(grid, sites)
-    for (color, point) in sites
-        if 1 <= point[1] <= size(grid, 1) && 1 <= point[2] <= size(grid, 2)
-            grid[point...] = convert(eltype(grid), color)
+@inbounds function preset_voronoi!(grid, sites)
+    for (color, (x, y)) in sites
+        if checkbounds(Bool, grid, x, y)
+            grid[x, y] = convert(eltype(grid), color)
         end
     end
-    grid
+    return grid
 end
 
-function preset_voronoi_rounded!(grid, sites)
-    for (color, point) in sites
-        closest_point = round_tuple(point)
-        if 1 <= closest_point[1] <= size(grid, 1) && 1 <= closest_point[2] <= size(grid, 2)
-            grid[closest_point...] = convert(eltype(grid), color)
+@inbounds function preset_voronoi_rounded!(grid, sites)
+    for (color, (x, y)) in sites
+        xp, yp = round_tuple((x, y))
+        if checkbounds(Bool, grid, xp, yp)
+            grid[xp, yp] = convert(eltype(grid), color)
         end
     end
-    grid
+    return grid
 end
 
-function jfa_voronoi!(grid, points, distance=euclidean)
+@inbounds function naive_voronoi!(grid, points, distance=euclidean) 
+    for y in axes(grid, 2), x in axes(grid, 1)
+        _, min_color = _findmin(points) do point
+            distance((x, y), point)
+        end
+        grid[x, y] = convert(eltype(grid), min_color)
+    end
+    return grid
+end
+
+@inbounds function jfa_voronoi!(grid, points, distance=euclidean)
     for (color, (x, y)) in enumerate(points)
         grid[x, y] = convert(eltype(grid), color)
     end
     k = max(size(grid)...)
     while k > 1
         k = k ÷ 2 + k % 2
-        @inbounds for y in axes(grid, 2), x in axes(grid, 1)
+        for y in axes(grid, 2), x in axes(grid, 1)
             for j in (-k, 0, k), i in (-k, 0, k)
                 ((i !== 0 || j !== 0) && checkbounds(Bool, grid, x + i, y + j) && (colorq = grid[x + i, y + j]) !== 0) || continue
                 if (colorp = grid[x, y]) === 0 || distance(points[colorp], (x, y)) > distance(points[colorq], (x, y))
@@ -49,7 +61,7 @@ function jfa_voronoi!(grid, points, distance=euclidean)
     return grid
 end
 
-function jfa_voronoi_parallel!(grid, points, distance=euclidean)
+@inbounds function jfa_voronoi_parallel!(grid, points, distance=euclidean)
     for (color, (x, y)) in enumerate(points)
         grid[x, y] = convert(eltype(grid), color)
     end
@@ -57,7 +69,7 @@ function jfa_voronoi_parallel!(grid, points, distance=euclidean)
     k = max(size(grid)...)
     while k > 1
         k = k ÷ 2 + k % 2
-        @inbounds @batch for y in axes(grid, 2), x in axes(grid, 1)
+        @batch for y in axes(grid, 2), x in axes(grid, 1)
             for j in (-k, 0, k), i in (-k, 0, k)
                 ((i !== 0 || j !== 0) && checkbounds(Bool, grid, x + i, y + j) && (colorq = grid[x + i, y + j]) !== 0) || continue
                 if (colorp = grid[x, y]) === 0 || distance(points[colorp], (x, y)) > distance(points[colorq], (x, y))
@@ -117,7 +129,7 @@ end
         distance(center, point)
     end
     (t, l), (b, r) = rect
-    max_dist = min_dist + distance((b, r), (t, l)) + 1
+    max_dist = min_dist + distance((b, r), (t, l)) # + 1
     if dist > max_dist
         grid[t:b, l:r] .= convert(eltype(grid), sites[min_color][1])
         return true
@@ -141,6 +153,18 @@ end
     return grid
 end
 
+@inbounds function naive_site_filter(grid, sites, rect, distance)
+    conquer_base_cases!(grid, sites, rect, distance) && return true, ()
+    corners = get_corners(rect)
+    return false, collect(_filter(sites) do site1
+        _all(sites) do site2
+            _any(corners) do corner
+                distance(site1[2], corner) <= distance(site2[2], corner)
+            end
+        end
+    end)
+end
+
 @inbounds function center_site_filter(grid, sites, rect, distance)
     conquer_base_cases!(grid, sites, rect, distance) && return true, ()
     center = get_center(rect)
@@ -148,7 +172,7 @@ end
         distance(center, site[2])
     end
     (t, l), (b, r) = rect
-    max_dist = min_dist + distance((b, r), (t, l)) + 1
+    max_dist = min_dist + distance((b, r), (t, l)) # + 1
     return false, collect(_filter(sites) do site
         distance(center, site[2]) <= max_dist
     end)
@@ -163,7 +187,38 @@ end
     corners = get_corners(rect)
     return false, collect(_filter(sites) do site
         _any(corners) do corner
-            distance(corner, site[2]) <= distance(corner, sites[min_color][2])
+            distance(site[2], corner) <= distance(sites[min_color][2], corner)
+        end
+    end)
+end
+
+@inbounds function corner_site_filter(grid, sites, rect, distance)
+    conquer_base_cases!(grid, sites, rect, distance) && return true, ()
+    corners = get_corners(rect)
+    mins = ((_findmin(sites) do site
+        distance(corner, site[2])
+    end for corner in corners)...,)
+    return false, collect(_filter(sites) do site
+        _all(mins) do (_, min_color)
+            _any(corners) do corner
+                distance(site[2], corner) <= distance(sites[min_color][2], corner)
+            end
+        end
+    end)
+end
+
+@inbounds function edge_site_filter(grid, sites, rect, distance)
+    conquer_base_cases!(grid, sites, rect, distance) && return true, ()
+    edges = get_edges(rect)
+    mins = unique(((_findmin(sites) do site
+        distance(edge, site[2])
+    end for edge in edges)...,))
+    corners = get_corners(rect)
+    return false, collect(_filter(sites) do site
+        _all(mins) do (_, min_color)
+            _any(corners) do corner
+                distance(site[2], corner) <= distance(sites[min_color][2], corner)
+            end
         end
     end)
 end
@@ -185,6 +240,19 @@ end
     grid
 end
 
+@inbounds function naive_site_filter!(grid, sites, rect, distance, stack)
+    conquer_base_cases!(grid, sites, rect, distance) && return true
+    corners = get_corners(rect)
+    set_sites!(stack, _filter(sites) do site1
+        _all(sites) do site2
+            _any(corners) do corner
+                distance(site1[2], corner) <= distance(site2[2], corner)
+            end
+        end
+    end)
+    return false
+end
+
 @inbounds function center_site_filter!(grid, sites, rect, distance, stack)
     conquer_base_cases!(grid, sites, rect, distance) && return true
     center = get_center(rect)
@@ -192,7 +260,7 @@ end
         distance(center, site[2])
     end
     (t, l), (b, r) = rect
-    max_dist = min_dist + distance((b, r), (t, l)) + 1
+    max_dist = min_dist + distance((b, r), (t, l)) # + 1
     set_sites!(stack, _filter(sites) do site
         distance(center, site[2]) <= max_dist
     end)
@@ -208,7 +276,40 @@ end
     corners = get_corners(rect)
     set_sites!(stack, _filter(sites) do site
         _any(corners) do corner
-            distance(corner, site[2]) <= distance(corner, sites[min_color][2])
+            distance(site[2], corner) <= distance(sites[min_color][2], corner)
+        end
+    end)
+    return false
+end
+
+@inbounds function corner_site_filter!(grid, sites, rect, distance, stack)
+    conquer_base_cases!(grid, sites, rect, distance) && return true
+    corners = get_corners(rect)
+    mins = ((_findmin(sites) do site
+        distance(corner, site[2])
+    end for corner in corners)...,)
+    set_sites!(stack, _filter(sites) do site
+        _all(mins) do (_, min_color)
+            _any(corners) do corner
+                distance(site[2], corner) <= distance(sites[min_color][2], corner)
+            end
+        end
+    end)
+    return false
+end
+
+@inbounds function edge_site_filter!(grid, sites, rect, distance, stack)
+    conquer_base_cases!(grid, sites, rect, distance) && return true
+    edges = get_edges(rect)
+    mins = unique(((_findmin(sites) do site
+        distance(edge, site[2])
+    end for edge in edges)...,))
+    corners = get_corners(rect)
+    set_sites!(stack, _filter(sites) do site
+        _all(mins) do (_, min_color)
+            _any(corners) do corner
+                distance(site[2], corner) <= distance(sites[min_color][2], corner)
+            end
         end
     end)
     return false
