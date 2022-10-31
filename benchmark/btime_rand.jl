@@ -6,7 +6,7 @@ for n in [100, 1000]
     for s in [isqrt(n), n, n * isqrt(n), n * n]
         @show n, s
 
-        #= println("jfa_voronoi!")
+        println("jfa_voronoi!")
         @btime jfa_voronoi!(grid, sites) setup=(
             Random.seed!(42);
             sites = rand_points(Int, $n, $n, $s);
@@ -29,7 +29,7 @@ for n in [100, 1000]
                     grid = preset_voronoi!(zeros(Int, $n, $n), sites);
                     site_find = $site_find) evals=1
             end
-        end =#
+        end
 
         println("redac_voronoi!")
         for site_filter in [naive_site_filter, center_site_filter, anchor_site_filter, corner_site_filter]
@@ -41,7 +41,7 @@ for n in [100, 1000]
                 site_filter = $site_filter) evals=1
         end
 
-        #= println("redac_voronoi_optimized!")
+        println("redac_voronoi_optimized!")
         for site_filter! in [naive_site_filter!, center_site_filter!, anchor_site_filter!, corner_site_filter!]
             @show site_filter!
             @btime redac_voronoi_optimized!(grid, sites, site_filter!) setup=(
@@ -49,7 +49,7 @@ for n in [100, 1000]
                 sites = rand_sites(Int, $n, $n, $s);
                 grid = preset_voronoi!(zeros(Int, $n, $n), sites);
                 site_filter! = $site_filter!) evals=1
-        end =#
+        end
     end
 end
 

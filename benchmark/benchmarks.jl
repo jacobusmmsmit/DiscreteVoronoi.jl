@@ -14,7 +14,7 @@ for n in [10, 100, 1000]
             points = rand_points(Int, $n, $n, $s);
             grid = zeros(Int, $n, $n)) evals=1
 
-        for site_filter in [center_site_filter, anchor_site_filter]
+        for site_filter in [center_site_filter, anchor_site_filter, corner_site_filter]
             SUITE[string("grid ", n, "x", n)][string(s, " sites")][site_filter] = @benchmarkable redac_voronoi!(grid, sites, site_filter) setup=(
                 Random.seed!(42);
                 sites = rand_sites(Int, $n, $n, $s);
