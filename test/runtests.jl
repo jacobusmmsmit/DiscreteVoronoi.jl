@@ -125,6 +125,7 @@ const REPETITIONS = 100
 @testset verbose=true "jfa_voronoi! working for Int sites" begin
     Random.seed!(42)
     for distance in [cityblock, euclidean, chebyshev]
+        test_passes = true
         @testset "$distance" begin 
             for i in 1:REPETITIONS
                 N, M = rand(1:100, 2)
@@ -134,8 +135,10 @@ const REPETITIONS = 100
                 # naive_voronoi!(grid1, points, distance=distance)
                 grid2 = zeros(Coord, (N, M))
                 jfa_voronoi!(grid2, points, distance=distance)
-                @test !any(==(0), grid2) 
+                test_passes = test_passes && !any(==(0), grid2) 
+                test_passes || break
             end
+            test_passes ? (@test test_passes) : (@test_broken test_passes)
         end
     end
 end
@@ -144,6 +147,7 @@ end
     Random.seed!(42)
     for distance in [cityblock, euclidean, chebyshev]
         @testset "$distance" begin
+            test_passes = true
             for i in 1:REPETITIONS
                 N, M = rand(1:100, 2)
                 points = random_coordinates(N, M, rand(1:100))
@@ -152,12 +156,10 @@ end
                 naive_voronoi!(grid1, points, distance=distance)
                 grid2 = zeros(Coord, (N, M))
                 dac_voronoi!(grid2, points, distance=distance)
-                if grid2 == grid1
-                    @test grid2 == grid1
-                else
-                    @test_broken grid2 == grid1
-                end
+                test_passes = test_passes && grid2 == grid1
+                test_passes || break
             end
+            test_passes ? (@test test_passes) : (@test_broken test_passes)
         end
     end
 end
@@ -168,6 +170,7 @@ end
         @testset verbose=true "$distance" begin
             for auxiliary in [exact_aux, centre_anchor_aux]
                 @testset "$auxiliary" begin
+                    test_passes = true
                     for i in 1:REPETITIONS
                         N, M = rand(1:100, 2)
                         points = random_coordinates(N, M, rand(1:100))
@@ -176,12 +179,10 @@ end
                         naive_voronoi!(grid1, points, distance=distance)
                         grid2 = zeros(Coord, (N, M))
                         redac_voronoi!(grid2, points, distance=distance, auxiliary=auxiliary)
-                        if voronoi_equality(grid2, grid1; distance=distance)
-                            @test voronoi_equality(grid2, grid1, distance=distance)
-                        else
-                            @test_broken voronoi_equality(grid2, grid1, distance=distance)
-                        end
+                        test_passes = test_passes && voronoi_equality(grid2, grid1; distance=distance)
+                        test_passes || break
                     end
+                    test_passes ? (@test test_passes) : (@test_broken test_passes)
                 end
             end
         end
