@@ -9,11 +9,11 @@ const Coord = SVector{2,Int}
 Base.zero(::Type{Coord}) = Coord(0, 0)
 
 function random_coordinates(N, M, K)
-    Coord.(shuffle!([Iterators.product(1:N, 1:M)...])[1:min(M * N, K)])
+    Coord.(shuffle!([Iterators.product(1:N, 1:M)...])[1:min(N * M, K)])
 end
 
-for n in [100, 1000]
-    for s in [isqrt(n), n, n * isqrt(n)] # , n * n]
+for n in [100, 200, 400]
+    for s in [isqrt(n), n, n * isqrt(n), n * n]
         @show n, s
 
         println("jfa_voronoi!")
