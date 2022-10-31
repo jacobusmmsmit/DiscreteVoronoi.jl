@@ -169,19 +169,23 @@ end
 @testset verbose=true "redac_voronoi! matching results for Int sites" begin
     Random.seed!(42)
     for distance in [cityblock, euclidean, chebyshev]
-        @testset "$distance" begin
-            for i in 1:REPETITIONS
-                N, M = rand(1:100, 2)
-                points = rand_points(Int, N, M, rand(1:100))
+        @testset verbose=true "$distance" begin
+            for auxiliary in [exact_aux, centre_anchor_aux]
+                @testset "$auxiliary" begin
+                    for i in 1:REPETITIONS
+                        N, M = rand(1:100, 2)
+                        points = rand_points(Int, N, M, rand(1:100))
 
-                grid1 = zeros(Coord, (N, M))
-                naive_voronoi!(grid1, points, distance=distance)
-                grid2 = zeros(Coord, (N, M))
-                redac_voronoi!(grid2, points, distance=distance)
-                if voronoi_equality(grid2, grid1; distance=distance)
-                    @test voronoi_equality(grid2, grid1; distance=distance)
-                else
-                    @test_broken voronoi_equality(grid2, grid1; distance=distance)
+                        grid1 = zeros(Coord, (N, M))
+                        naive_voronoi!(grid1, points, distance=distance)
+                        grid2 = zeros(Coord, (N, M))
+                        redac_voronoi!(grid2, points, distance=distance, auxiliary=auxiliary)
+                        if voronoi_equality(grid2, grid1; distance=distance)
+                            @test voronoi_equality(grid2, grid1, distance=distance)
+                        else
+                            @test_broken voronoi_equality(grid2, grid1, distance=distance)
+                        end
+                    end
                 end
             end
         end
