@@ -12,10 +12,6 @@ using DiscreteVoronoi: EarlyStopper, early_stop_sort!
 
 const Coord = SVector{2,Int}
 
-function random_coordinates(N, K)
-    Coord.(shuffle!([Iterators.product(1:N, 1:N)...])[1:K])
-end
-
 @testset "Elimination methods" begin
     # Setup: a grid with sites on and directly around each corner.
     # Expected result: after exact elimination, we should see only the sites inside the grid.
@@ -132,7 +128,7 @@ const REPETITIONS = 100
         @testset "$distance" begin 
             for i in 1:REPETITIONS
                 N, M = rand(1:100, 2)
-                points = rand_points(Int, N, M, rand(1:100))
+                points = random_coordinates(N, M, rand(1:100))
 
                 # grid1 = zeros(Coord, (N, M))
                 # naive_voronoi!(grid1, points, distance=distance)
@@ -150,7 +146,7 @@ end
         @testset "$distance" begin
             for i in 1:REPETITIONS
                 N, M = rand(1:100, 2)
-                points = rand_points(Int, N, M, rand(1:100))
+                points = random_coordinates(N, M, rand(1:100))
 
                 grid1 = zeros(Coord, (N, M))
                 naive_voronoi!(grid1, points, distance=distance)
@@ -174,7 +170,7 @@ end
                 @testset "$auxiliary" begin
                     for i in 1:REPETITIONS
                         N, M = rand(1:100, 2)
-                        points = rand_points(Int, N, M, rand(1:100))
+                        points = random_coordinates(N, M, rand(1:100))
 
                         grid1 = zeros(Coord, (N, M))
                         naive_voronoi!(grid1, points, distance=distance)
