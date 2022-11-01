@@ -15,7 +15,7 @@ for n in [10, 100, 1000]
             grid = zeros(Int, $n, $n)) evals=1
 
         for site_filter in [center_site_filter, anchor_site_filter, corner_site_filter]
-            SUITE[string("grid ", n, "x", n)][string(s, " sites")][site_filter] = @benchmarkable redac_voronoi!(grid, sites, site_filter) setup=(
+            SUITE[string("grid ", n, "x", n)][string(s, " sites")][site_filter] = @benchmarkable redac_voronoi!(Val(:filter), grid, sites, site_filter) setup=(
                 Random.seed!(42);
                 sites = rand_sites(Int, $n, $n, $s);
                 grid = preset_voronoi!(zeros(Int, $n, $n), sites);
