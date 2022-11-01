@@ -101,21 +101,20 @@ end
 
 @inbounds function original_site_find(grid, sites, rect, distance)
     conquer_base_cases!(grid, sites, rect, distance) && return true
-    color = 0
     corners = get_corners(rect)
-    for corner in corners
-        min_dist, min_color = _findmin(sites) do site
-            distance(corner, site[2])
-        end
-        dist = _minimum(point for (color, point) in sites if color != min_color) do point
-            distance(corner, point)
-        end
-        dist > min_dist || return false
-        color == 0 && (color = min_color)
-        min_color == color || return false
-    end
+    mins = ((_findmin(sites) do site
+        distance(corner, site[2])
+    end for corner in corners)...,)
+    allequal(color for (dist, color) in mins) || return false
+    min_color = minimum(color for (dist, color) in mins)
+    dists = ((_minimum(point for (color, point) in sites if color != min_color) do point
+        distance(corner, point)
+    end for corner in corners)...,)
+    _any(zip(mins, dists)) do ((min_dist, _), dist)
+        dist <= min_dist
+    end && return false
     (t, l), (b, r) = rect
-    grid[t:b, l:r] .= convert(eltype(grid), sites[color][1])
+    grid[t:b, l:r] .= convert(eltype(grid), min_color)
     return true
 end
 
