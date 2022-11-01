@@ -69,16 +69,27 @@ end
     elseif length(sites) == 1 # Same if there is a single site
         view(grid, TL[1]:BR[1], TL[2]:BR[2]) .= Ref(first(sites))
     else
-        # Otherwise we check if all corners have the same closest site
+        # Otherwise we check if all corners have the same closest site ...
         corners = get_corners(TL, BR)
-        closest_corners = (find_closest_site(corner, sites, distance=distance) for corner in corners)
-        if allequal(closest_corners)
-            grid[TL[1]:BR[1], TL[2]:BR[2]] .= Ref(first(closest_corners))
-        else
-            # And if not we divide the grid into quadrants and "conquer" each one
-            for (quadrant_TL, quadrant_BR) in get_quadrants(TL, BR)
-                _dac_voronoi!(grid, quadrant_TL, quadrant_BR, sites; distance=distance)
+        mins = ((findmin(sites) do site
+            distance(corner, site)
+        end for corner in corners)...,)
+        if allequal(site for (dist, site) in mins)
+            # ... and if the closest site is unique
+            min_site = mins[1][1]
+            dists = ((minimum(site for site in sites if site != min_site) do site
+                distance(corner, site)
+            end for corner in corners)...,)
+            if all(zip(mins, dists)) do ((min_dist, _), dist)
+                    dist > min_dist
+                end
+                grid[t:b, l:r] .= min_site
+                return nothing
             end
+        end
+        # And if not we divide the grid into quadrants and "conquer" each one
+        for (quadrant_TL, quadrant_BR) in get_quadrants(TL, BR)
+            _dac_voronoi!(grid, quadrant_TL, quadrant_BR, sites; distance=distance)
         end
     end
     return nothing
