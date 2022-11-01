@@ -37,14 +37,5 @@ for s in [1, 2, 4, 8, 16, 32, 64]
             grid = preset_voronoi!(zeros(Int, $n, $n), sites);
             site_filter = $site_filter) evals=1 samples=1
     end
-
-    println("redac_voronoi_optimized!")
-    for site_filter! in [naive_site_filter!, center_site_filter!, anchor_site_filter!, corner_site_filter!]
-        @show site_filter!
-        @btime redac_voronoi_optimized!(grid, sites, site_filter!, euclidean, 0) setup=(
-            sites = reg_sites(Int, $n, $n, $s);
-            grid = preset_voronoi!(zeros(Int, $n, $n), sites);
-            site_filter! = $site_filter!) evals=1 samples=1
-    end
 end
 

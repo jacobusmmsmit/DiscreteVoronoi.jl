@@ -74,6 +74,35 @@ function _filter(f, xs)
     (x for x in xs if f(x))
 end
 
+function unstable_partition!(f, A)
+    i, j = 1, length(A)
+    @inbounds while true
+        while i < j && f(A[i])
+            i += 1
+        end
+        while i < j && !f(A[j])
+            j -= 1
+        end
+        if i < j
+            A[i], A[j] = A[j], A[i]
+            i += 1
+            j -= 1
+        else
+            break
+        end
+    end
+    if i == j
+        if f(A[i])
+            @views return A[1:i], A[(i+1):length(A)]
+        else
+            @views return A[1:(i-1)], A[i:length(A)]
+        end
+    else
+        @assert i == j + 1
+        @views return A[1:j], A[i:length(A)]
+    end
+end
+
 @inbounds function round_tuple(x)
     (round(Int, x[1]), round(Int, x[2]))
 end
@@ -143,7 +172,13 @@ function equal_grid_sites(grid1, grid2, sites, distance)
     for y in axes(grid1, 2), x in axes(grid1, 1)
         color1 = grid1[x, y]
         color2 = grid2[x, y]
-        color1 == color2 || distance((x, y), sites[color1][2]) ≈ distance((x, y), sites[color2][2]) || (result = false)
+        site1 = sites[findfirst(sites) do (color, _)
+            color == color1
+        end][2]
+        site2 = sites[findfirst(sites) do (color, _)
+            color == color2
+        end][2]
+        color1 == color2 || distance((x, y), site1) ≈ distance((x, y), site2) || (result = false)
     end
     return result
 end
