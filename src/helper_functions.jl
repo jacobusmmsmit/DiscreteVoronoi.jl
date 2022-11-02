@@ -11,6 +11,37 @@ end
 
 
 """
+    get_edge(TL, BR)
+
+Returns the edge (cells) between two vertically or horizontally aligned points.
+"""
+function get_edge(a, b)
+    all(a .!= b) && throw(ArgumentError("Points $a and $b must be vertically or horizontally aligned"))
+    if a[1] == b[1]
+        x, y = extrema((a[2], b[2]))
+        return (SVector{2,Int}(a[1], j) for j in x:1:y)
+    elseif a[2] == b[2]
+        x, y = extrema((a[1], b[1]))
+        return (SVector{2,Int}(i, a[2]) for i in x:1:y)
+    end
+end
+
+"""
+    get_edges(TL, BR)
+
+Returns a generator containing the cells on the border edges of the rectangle
+defined by its top-left (TL) and bottom-right (BR) corners.
+"""
+function get_edges(TL, BR)
+    corners = get_corners(TL, BR)
+    edge_cells = map(1:4) do i
+        j = mod(i, 4) + 1
+        return get_edge(corners[i], corners[j])
+    end
+    return Iterators.flatten(edge_cells)
+end
+
+"""
     swap!(v, i::Int, j::Int)
 
 Swap (in-place) the elements of `v` indexed by `i` and `j`. Does nothing if `i == j`.
@@ -40,7 +71,6 @@ end
 
 """
     find_closest_site!(grid, cell, sites; distance=euclidean)
-
 Return the closest site to `cell` in `sites` determined by `distance` but first
 check whether it has already been computed.
 """
@@ -61,7 +91,7 @@ end
 """
     find_closest_site(cell, sites; distance=euclidean)
 
-Return the closest site to `cell` in `sites` determined by `distance`.
+Returns the closest site to `cell` in `sites` determined by `distance`.
 """
 function find_closest_site(cell, sites; distance=euclidean)
     first_site, rest_sites = Iterators.peel(sites)
@@ -112,7 +142,7 @@ function voronoi_equality(grid1, grid2; distance=euclidean)
         ),
     )
     for I in CartesianIndices(grid1)
-        cell = Coord(Tuple(I))
+        cell = SVector{2,Int}(Tuple(I))
         grid1[I] == grid2[I] && continue
         distance(cell, grid1[I]) == distance(cell, grid2[I]) || return false
     end

@@ -5,7 +5,7 @@ using BenchmarkTools
 using Random
 using Distances
 
-using DiscreteVoronoi: get_corners, voronoi_equality, exact_condition, exact_aux, centre_anchor_aux
+using DiscreteVoronoi: get_corners, voronoi_equality, exact_condition, exact_aux, centre_anchor_aux, naive_edge_aux!, dac_edge_aux!
 using DiscreteVoronoi: EarlyStopper, early_stop_sort!
 
 const Coord = SVector{2,Int}
@@ -90,34 +90,30 @@ end
         for metric in (euclidean, cityblock, chebyshev)
             naive_grid = copy(grid)
             naive_voronoi!(naive_grid, sites; distance=metric) # Baseline for correctness
-            for aux in (exact_aux, centre_anchor_aux)
+            for aux in (exact_aux, centre_anchor_aux, naive_edge_aux!, dac_edge_aux!)
                 redac_grid = copy(grid)
                 redac_voronoi!(redac_grid, sites; distance=metric, auxiliary=aux)
-                @testset "$metric, $aux" begin
-                    @test voronoi_equality(naive_grid, redac_grid; distance=metric)
-                end
+                @test voronoi_equality(naive_grid, redac_grid; distance=metric)
             end
         end
     end
 
-    @testset "Auxiliary function allocations" begin
-        @test @ballocated(
-            exact_aux($grid, $sites, $TL, $(BR .÷ 2)), seconds = 1.0
-        ) == 0
-        @test @ballocated(
-            centre_anchor_aux($grid, $sites, $TL, $(BR .÷ 2)), seconds = 1.0
-        ) == 0
-    end
+    # @testset "Auxiliary function allocations" begin
+    #     for aux in (exact_aux, centre_anchor_aux, edge_aux, dac_edge_aux)
+    #         @test @ballocated(
+    #             $aux($grid, $sites, $TL, $(BR .÷ 2)), seconds = 1.0
+    #         ) == 0
+    #     end
+    # end
 
-    @testset "Main function allocations" begin
-        @test @ballocated(naive_voronoi!($grid, $sites), seconds = 1.0) == 0
-        @test @ballocated(dac_voronoi!($grid, $sites), seconds = 1.0) == 0
-        @test @ballocated(jfa_voronoi!($grid, $sites), seconds = 1.0) == 0
-        @test @ballocated(
-            redac_voronoi!($grid, $sites, auxiliary=exact_aux), seconds = 1.0
-        ) == 0
-        @test @ballocated(
-            redac_voronoi!($grid, $sites, auxiliary=centre_anchor_aux), seconds = 1.0
-        ) == 0
-    end
+    # @testset "Main function allocations" begin
+    #     @test @ballocated(naive_voronoi!($grid, $sites), seconds = 1.0) == 0
+    #     @test @ballocated(dac_voronoi!($grid, $sites), seconds = 1.0) == 0
+    #     @test @ballocated(jfa_voronoi!($grid, $sites), seconds = 1.0) == 0
+    #     for aux in (exact_aux, centre_anchor_aux, edge_aux, dac_edge_aux)
+    #         @test @ballocated(
+    #             redac_voronoi!($grid, $sites, auxiliary=$aux), seconds = 1.0
+    #         ) == 0
+    #     end
+    # end
 end
