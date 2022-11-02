@@ -93,9 +93,7 @@ end
             for aux in (exact_aux, centre_anchor_aux)
                 redac_grid = copy(grid)
                 redac_voronoi!(redac_grid, sites; distance=metric, auxiliary=aux)
-                @testset "$metric, $aux" begin
-                    @test voronoi_equality(naive_grid, redac_grid; distance=metric)
-                end
+                @test voronoi_equality(naive_grid, redac_grid; distance=metric)
             end
         end
     end
