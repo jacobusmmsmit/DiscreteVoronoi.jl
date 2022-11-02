@@ -136,7 +136,7 @@ end
         end
         # And if not we eliminate faraway seeds from subsequent steps
         # `auxiliary` sorts sites by whether the predicate is true and stores how many are true.
-        local_sites = auxiliary(sites, TL, BR; distance=distance)
+        local_sites = auxiliary(grid, sites, TL, BR; distance=distance)
         # then divide the grid into quadrants and "conquer" each one
         for (quadrant_TL, quadrant_BR) in get_quadrants(TL, BR)
             _redac_voronoi!(grid, quadrant_TL, quadrant_BR, local_sites; distance=distance, auxiliary=auxiliary)
