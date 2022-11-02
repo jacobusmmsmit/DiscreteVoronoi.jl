@@ -21,7 +21,7 @@ function centre_anchor_condition(site, sites, TL, BR; distance=euclidean)
     return any(distance(site, corner) <= distance(anchor, corner) for corner in corners)
 end
 
-function centre_anchor_aux(sites, TL, BR; distance=euclidean)
+function centre_anchor_aux(grid, sites, TL, BR; distance=euclidean)
     centre = @. TL + BR / 2
     anchor = find_closest_site(centre, sites)
     corners = get_corners(TL, BR)
@@ -32,7 +32,7 @@ function centre_anchor_aux(sites, TL, BR; distance=euclidean)
     return early_stop_sort!(sites, predicate)
 end
 
-function exact_aux(sites, TL, BR; distance=euclidean)
+function exact_aux(grid, sites, TL, BR; distance=euclidean)
     predicate(site) = all(TL .<= site .<= BR) || exact_condition(site, sites, TL, BR; distance=distance)
     return early_stop_sort!(sites, predicate)
 end
