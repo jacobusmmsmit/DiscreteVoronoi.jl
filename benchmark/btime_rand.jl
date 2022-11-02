@@ -35,20 +35,25 @@ for n in [100, 1000]
         println("redac_voronoi!")
         for method in [:filter, :partition]
             @show method
-            for site_filter in [naive_site_filter, center_site_filter, anchor_site_filter, corner_site_filter]
-                @show site_filter
-                if method === :filter
-                    @btime redac_voronoi!(Val(:filter), grid, sites, site_filter, euclidean) setup=(
-                        Random.seed!(42);
-                        sites = rand_sites(Int, $n, $n, $s);
-                        grid = preset_voronoi!(zeros(Int, $n, $n), sites);
-                        site_filter = $site_filter) evals=1
-                elseif method === :partition
-                    @btime redac_voronoi!(Val(:partition), grid, sites, site_filter, euclidean) setup=(
-                        Random.seed!(42);
-                        sites = rand_sites(Int, $n, $n, $s);
-                        grid = preset_voronoi!(zeros(Int, $n, $n), sites);
-                        site_filter = $site_filter) evals=1
+            for site_find in [no_site_find, original_site_find, center_site_find]
+                @show site_find
+                for site_filter in [naive_site_filter, center_site_filter, anchor_site_filter, corner_site_filter]
+                    @show site_filter
+                    if method === :filter
+                        @btime redac_voronoi!(Val(:filter), grid, sites, site_find, site_filter, euclidean) setup=(
+                            Random.seed!(42);
+                            sites = rand_sites(Int, $n, $n, $s);
+                            grid = preset_voronoi!(zeros(Int, $n, $n), sites);
+                            site_find = $site_find;
+                            site_filter = $site_filter) evals=1
+                    elseif method === :partition
+                        @btime redac_voronoi!(Val(:partition), grid, sites, site_find, site_filter, euclidean) setup=(
+                            Random.seed!(42);
+                            sites = rand_sites(Int, $n, $n, $s);
+                            grid = preset_voronoi!(zeros(Int, $n, $n), sites);
+                            site_find = $site_find;
+                            site_filter = $site_filter) evals=1
+                    end
                 end
             end
         end
