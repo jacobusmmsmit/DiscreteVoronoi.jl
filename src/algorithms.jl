@@ -4,7 +4,7 @@ using Polyester
 export preset_voronoi!, preset_voronoi_rounded!
 export naive_voronoi!
 export jfa_voronoi!, jfa_voronoi_parallel!
-export original_site_find, center_site_find
+export no_site_find, original_site_find, center_site_find
 export dac_voronoi!
 export naive_site_filter, center_site_filter, anchor_site_filter, corner_site_filter, edge_site_filter
 export redac_voronoi!
@@ -95,6 +95,8 @@ end
     return false
 end
 
+no_site_find(grid, sites, rect, distance) = false
+
 @inbounds function original_site_find(grid, sites, rect, distance)
     corners = get_corners(rect)
     mins = ((_findmin(sites) do site
@@ -130,17 +132,17 @@ end
     return false
 end
 
-@inbounds function dac_voronoi!(grid, sites, conquer, distance=euclidean, depth::Int=1, rect=((1,1), size(grid)))
+@inbounds function dac_voronoi!(grid, sites, site_find, distance=euclidean, depth::Int=1, rect=((1,1), size(grid)))
     base_cases!(grid, sites, rect, distance) && return grid
-    conquer(grid, sites, rect, distance) && return grid
+    site_find(grid, sites, rect, distance) && return grid
     quadrants = get_quadrants(rect)
     if depth > 0
         Threads.@threads for quadrant in quadrants
-            dac_voronoi!(grid, sites, conquer, distance, depth - 1, quadrant)
+            dac_voronoi!(grid, sites, site_find, distance, depth - 1, quadrant)
         end
     else
         for quadrant in quadrants
-            dac_voronoi!(grid, sites, conquer, distance, depth - 1, quadrant)
+            dac_voronoi!(grid, sites, site_find, distance, depth - 1, quadrant)
         end
     end
     return grid
@@ -271,32 +273,34 @@ end
     end[1]
 end
 
-@inbounds function redac_voronoi!(method::Val{:filter}, grid, sites, conquer, distance=euclidean, depth::Int=1, rect=((1, 1), size(grid)))
+@inbounds function redac_voronoi!(method::Val{:filter}, grid, sites, site_find, site_filter, distance=euclidean, depth::Int=1, rect=((1, 1), size(grid)))
     base_cases!(grid, sites, rect, distance) && return grid
-    filtered_sites = conquer(method, grid, sites, rect, distance)
+    site_find(grid, sites, rect, distance) && return grid
+    filtered_sites = site_filter(method, grid, sites, rect, distance)
     quadrants = get_quadrants(rect)
     if depth > 0
         Threads.@threads for quadrant in quadrants
-            redac_voronoi!(method, grid, filtered_sites, conquer, distance, depth - 1, quadrant)
+            redac_voronoi!(method, grid, filtered_sites, site_find, site_filter, distance, depth - 1, quadrant)
         end
     else
         for quadrant in quadrants
-            redac_voronoi!(method, grid, filtered_sites, conquer, distance, depth - 1, quadrant)
+            redac_voronoi!(method, grid, filtered_sites, site_find, site_filter, distance, depth - 1, quadrant)
         end
     end
     grid
 end
-@inbounds function redac_voronoi!(method::Val{:partition}, grid, sites, conquer, distance=euclidean, depth::Int=1, rect=((1, 1), size(grid)))
+@inbounds function redac_voronoi!(method::Val{:partition}, grid, sites, site_find, site_filter, distance=euclidean, depth::Int=1, rect=((1, 1), size(grid)))
     base_cases!(grid, sites, rect, distance) && return grid
-    filtered_sites = conquer(method, grid, sites, rect, distance)
+    site_find(grid, sites, rect, distance) && return grid
+    filtered_sites = site_filter(method, grid, sites, rect, distance)
     quadrants = get_quadrants(rect)
     if depth > 0
         Threads.@threads for quadrant in quadrants
-            redac_voronoi!(method, grid, copy(filtered_sites), conquer, distance, depth - 1, quadrant)
+            redac_voronoi!(method, grid, copy(filtered_sites), site_find, site_filter, distance, depth - 1, quadrant)
         end
     else
         for quadrant in quadrants
-            redac_voronoi!(method, grid, filtered_sites, conquer, distance, depth - 1, quadrant)
+            redac_voronoi!(method, grid, filtered_sites, site_find, site_filter, distance, depth - 1, quadrant)
         end
     end
     grid
