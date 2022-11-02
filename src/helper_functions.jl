@@ -19,6 +19,35 @@ function swap!(v, i::Int, j::Int)
     return nothing
 end
 
+function unstable_partition!(f, A)
+    i, j = 1, length(A)
+    @inbounds while true
+        while i < j && f(A[i])
+            i += 1
+        end
+        while i < j && !f(A[j])
+            j -= 1
+        end
+        if i < j
+            A[i], A[j] = A[j], A[i]
+            i += 1
+            j -= 1
+        else
+            break
+        end
+    end
+    if i == j
+        if f(A[i])
+            @views return A[1:i], A[(i+1):length(A)]
+        else
+            @views return A[1:(i-1)], A[i:length(A)]
+        end
+    else
+        @assert i == j + 1
+        @views return A[1:j], A[i:length(A)]
+    end
+end
+
 """
     get_quadrants(TL, BR)
 

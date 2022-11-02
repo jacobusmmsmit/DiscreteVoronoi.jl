@@ -104,11 +104,11 @@ step which aims to reduce the work of subsequent steps.
 function redac_voronoi!(grid::Matrix{T}, sites::Vector{T}; distance=euclidean, auxiliary=exact_aux) where {T<:SVector{2,Int}}
     TL = 1, 1
     BR = size(grid)
-    _redac_voronoi!(grid, TL, BR, EarlyStopper(sites); distance=distance, auxiliary=exact_aux)
+    _redac_voronoi!(grid, TL, BR, sites; distance=distance, auxiliary=auxiliary)
     return nothing
 end
 
-@inbounds function _redac_voronoi!(grid, TL, BR, sites::ES; distance, auxiliary) where {ES<:EarlyStopper}
+@inbounds function _redac_voronoi!(grid, TL, BR, sites; distance, auxiliary)
     any(TL .> BR) && return nothing
     # Then, if the grid is a single cell then we are done
     if all(BR .== TL)
@@ -116,19 +116,30 @@ end
     elseif length(sites) == 1 # Same if there is a single site
         view(grid, TL[1]:BR[1], TL[2]:BR[2]) .= Ref(first(sites))
     else
-        # Otherwise we check if all corners have the same closest site
+        # Otherwise we check if all corners have the same closest site ...
         corners = get_corners(TL, BR)
-        closest_corners = (find_closest_site(corner, sites, distance=distance) for corner in corners)
-        if allequal(closest_corners)
-            view(grid, TL[1]:BR[1], TL[2]:BR[2]) .= Ref(first(closest_corners))
-        else
-            # And if not we eliminate faraway seeds from subsequent steps
-            # `auxiliary` sorts sites by whether the predicate is true and stores how many are true.
-            local_sites = auxiliary(sites, TL, BR; distance=distance)
-            # then divide the grid into quadrants and "conquer" each one
-            for (quadrant_TL, quadrant_BR) in get_quadrants(TL, BR)
-                _redac_voronoi!(grid, quadrant_TL, quadrant_BR, local_sites; distance=distance, auxiliary=auxiliary)
+        mins = ((findmin(sites) do site
+            distance(corner, site)
+        end for corner in corners)...,)
+        if allequal(site for (dist, site) in mins)
+            # ... and if the closest site is unique
+            min_site = mins[1][1]
+            dists = ((minimum(site for site in sites if site != min_site) do site
+                distance(corner, site)
+            end for corner in corners)...,)
+            if all(zip(mins, dists)) do ((min_dist, _), dist)
+                    dist > min_dist
+                end
+                grid[t:b, l:r] .= min_site
+                return nothing
             end
+        end
+        # And if not we eliminate faraway seeds from subsequent steps
+        # `auxiliary` sorts sites by whether the predicate is true and stores how many are true.
+        local_sites = auxiliary(sites, TL, BR; distance=distance)
+        # then divide the grid into quadrants and "conquer" each one
+        for (quadrant_TL, quadrant_BR) in get_quadrants(TL, BR)
+            _redac_voronoi!(grid, quadrant_TL, quadrant_BR, local_sites; distance=distance, auxiliary=auxiliary)
         end
     end
     return nothing

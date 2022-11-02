@@ -29,10 +29,10 @@ function centre_anchor_aux(sites, TL, BR; distance=euclidean)
         return all(TL .<= site .<= BR) ||
                any(distance(corner, site) <= distance(corner, anchor) for corner in corners)
     end
-    return early_stop_sort!(sites, predicate)
+    return unstable_partition!(predicate, sites)[1]
 end
 
 function exact_aux(sites, TL, BR; distance=euclidean)
     predicate(site) = all(TL .<= site .<= BR) || exact_condition(site, sites, TL, BR; distance=distance)
-    return early_stop_sort!(sites, predicate)
+    return unstable_partition!(predicate, sites)[1]
 end
