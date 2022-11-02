@@ -1,11 +1,14 @@
 """
     get_corners(TL, BR)
 
-Returns the corners of the rectangle defined by its top-left (TL) and bottom-right (BR) corners
+Returns the corners of the rectangle defined by its top-left (TL) and
+bottom-right (BR) corners. The order of returning is TL, TR, BR, BL such that
+the pairs of corners can be looped over to get edges.
 """
 function get_corners(TL, BR)
-    return (TL, (TL[1], BR[2]), (BR[1], TL[2]), BR)
+    return (TL, (TL[1], BR[2]), BR, (BR[1], TL[2]))
 end
+
 
 """
     swap!(v, i::Int, j::Int)
@@ -65,9 +68,29 @@ function get_quadrants(TL, BR)
 end
 
 """
+    find_closest_site!(grid, cell, sites; distance=euclidean)
+
+Return the closest site to `cell` in `sites` determined by `distance` but first
+check whether it has already been computed.
+"""
+function find_closest_site!(grid, cell, sites; distance=euclidean)
+    if all(grid[cell...] .== 0)
+        grid[cell...] = find_closest_site(cell, sites; distance=distance)
+    end
+    return grid[cell...]
+end
+
+function find_closest_site!(grid, I::CartesianIndex, sites; distance=euclidean)
+    if all(grid[I] .== 0)
+        grid[I] = find_closest_site(I, sites; distance=distance)
+    end
+    return grid[I]
+end
+
+"""
     find_closest_site(cell, sites; distance=euclidean)
 
-Returns the closest site to `cell` in `sites` determined by `distance`.
+Return the closest site to `cell` in `sites` determined by `distance`.
 """
 function find_closest_site(cell, sites; distance=euclidean)
     first_site, rest_sites = Iterators.peel(sites)
@@ -118,7 +141,7 @@ function voronoi_equality(grid1, grid2; distance=euclidean)
         ),
     )
     for I in CartesianIndices(grid1)
-        cell = SVector{2,Int}(Tuple(I))
+        cell = Coord(Tuple(I))
         grid1[I] == grid2[I] && continue
         distance(cell, grid1[I]) == distance(cell, grid2[I]) || return false
     end

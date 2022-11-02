@@ -54,68 +54,66 @@ end
         n = 500
         l = 30
         TL, BR = (1, 1), (n, n)
-        locs = random_coordinates(n, l)
+        sites = random_coordinates(n, l)
         # locs = sort([Coord(rand(1:n, 2)) for _ in 1:l]) # Possibly overlapping sites.
         grid = zeros(Coord, (n, n))
-        es3 = EarlyStopper(locs)
-        predicate3(x) = exact_condition(x, locs, TL, BR)
+        es3 = EarlyStopper(sites)
+        predicate3(x) = exact_condition(x, sites, TL, BR)
         new_es3 = early_stop_sort!(es3, predicate3)
-        @test new_es3.obj == sort(locs; by=predicate3)
+        @test new_es3.obj == sort(sites; by=predicate3)
     end
 end
 
 @testset "DiscreteVoronoi.jl" begin
-    n = 11
-    l = 3
+    n = 50
+    l = 30
     TL, BR = (1, 1), (n, n)
-    # locs = sort([Coord(rand(1:n, 2)) for _ in 1:l])
-    locs = random_coordinates(n, l) # Possibly overlapping sites.
+
+    #TODO: Test with overlapping sites.
+    #TODO: Concrete tests to ensure `naive_voronoi` is correct.
+    sites = random_coordinates(n, l)
     grid = zeros(Coord, (n, n))
 
-    naive_grid = deepcopy(grid)
-    naive_voronoi!(naive_grid, locs) # Baseline for correctness
-    dac_grid = deepcopy(grid)
-    dac_voronoi!(dac_grid, locs)
-    redac_grid = deepcopy(grid)
-    redac_voronoi!(redac_grid, locs; auxiliary=exact_aux)
-
-    # Cityblock = L1 = Taxicab
-    naive_grid_cityblock = deepcopy(grid)
-    naive_voronoi!(naive_grid_cityblock, locs; distance=cityblock)
-    dac_grid_cityblock = deepcopy(grid)
-    dac_voronoi!(dac_grid_cityblock, locs; distance=cityblock)
-    redac_grid_cityblock = deepcopy(grid)
-    redac_voronoi!(redac_grid_cityblock, locs; distance=cityblock)
-
-    # Chebyshev = L∞ = maximum norm
-    naive_grid_chebyshev = deepcopy(grid)
-    naive_voronoi!(naive_grid_chebyshev, locs; distance=chebyshev)
-    dac_grid_chebyshev = deepcopy(grid)
-    dac_voronoi!(dac_grid_chebyshev, locs; distance=chebyshev)
-    redac_grid_chebyshev = deepcopy(grid)
-    redac_voronoi!(redac_grid_chebyshev, locs; distance=chebyshev)
-
-    @testset "Correctness" begin
-        @test voronoi_equality(dac_grid, naive_grid)
-        @test voronoi_equality(redac_grid, naive_grid)
+    @testset "DAC correctness" begin
+        for metric in (euclidean, cityblock, chebyshev)
+            naive_grid = copy(grid)
+            naive_voronoi!(naive_grid, sites) # Baseline for correctness
+            dac_grid = copy(grid)
+            dac_voronoi!(dac_grid, sites)
+            @test voronoi_equality(naive_grid, dac_grid; distance=metric)
+        end
     end
 
-    @testset "Different Lp Norms" begin
-        @test voronoi_equality(dac_grid_cityblock, naive_grid_cityblock; distance=cityblock)
-        @test voronoi_equality(redac_grid_cityblock, naive_grid_cityblock; distance=cityblock)
-        @test voronoi_equality(dac_grid_chebyshev, naive_grid_chebyshev; distance=chebyshev)
-        @test voronoi_equality(redac_grid_chebyshev, naive_grid_chebyshev; distance=chebyshev)
+    @testset "REDAC correctness" begin
+        for metric in (euclidean, cityblock, chebyshev)
+            naive_grid = copy(grid)
+            naive_voronoi!(naive_grid, sites; distance=metric) # Baseline for correctness
+            for aux in (exact_aux, centre_anchor_aux)
+                redac_grid = copy(grid)
+                redac_voronoi!(redac_grid, sites; distance=metric, auxiliary=aux)
+                @test voronoi_equality(naive_grid, redac_grid; distance=metric)
+            end
+        end
     end
 
-    @testset "Allocations" begin
-        @test @ballocated(naive_voronoi!($grid, $locs), seconds = 1.0) == 0
-        @test @ballocated(dac_voronoi!($grid, $locs), seconds = 1.0) == 0
-        @test @ballocated(jfa_voronoi!($grid, $locs), seconds = 1.0) == 0
+    @testset "Auxiliary function allocations" begin
         @test @ballocated(
-            redac_voronoi!($grid, $locs, auxiliary=exact_aux), seconds = 1.0
+            exact_aux($grid, $sites, $TL, $(BR .÷ 2)), seconds = 1.0
         ) == 0
         @test @ballocated(
-            redac_voronoi!($grid, $locs, auxiliary=centre_anchor_aux), seconds = 1.0
+            centre_anchor_aux($grid, $sites, $TL, $(BR .÷ 2)), seconds = 1.0
+        ) == 0
+    end
+
+    @testset "Main function allocations" begin
+        @test @ballocated(naive_voronoi!($grid, $sites), seconds = 1.0) == 0
+        @test @ballocated(dac_voronoi!($grid, $sites), seconds = 1.0) == 0
+        @test @ballocated(jfa_voronoi!($grid, $sites), seconds = 1.0) == 0
+        @test @ballocated(
+            redac_voronoi!($grid, $sites, auxiliary=exact_aux), seconds = 1.0
+        ) == 0
+        @test @ballocated(
+            redac_voronoi!($grid, $sites, auxiliary=centre_anchor_aux), seconds = 1.0
         ) == 0
     end
 end
