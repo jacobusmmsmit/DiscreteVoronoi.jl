@@ -5,7 +5,7 @@ using BenchmarkTools
 using Random
 using Distances
 
-using DiscreteVoronoi: get_corners, voronoi_equality, exact_condition, exact_aux, centre_anchor_aux, naive_edge_aux!, dac_edge_aux!
+using DiscreteVoronoi: get_corners, voronoi_equality, exact_condition, exact_aux, centre_anchor_aux
 using DiscreteVoronoi: EarlyStopper, early_stop_sort!
 
 const Coord = SVector{2,Int}
@@ -82,7 +82,7 @@ end
             naive_voronoi!(naive_grid, sites) # Baseline for correctness
             dac_grid = copy(grid)
             dac_voronoi!(dac_grid, sites)
-            @test voronoi_equality(naive_grid, dac_grid)
+            @test voronoi_equality(naive_grid, dac_grid; distance=metric)
         end
     end
 
@@ -90,10 +90,12 @@ end
         for metric in (euclidean, cityblock, chebyshev)
             naive_grid = copy(grid)
             naive_voronoi!(naive_grid, sites; distance=metric) # Baseline for correctness
-            for aux in (exact_aux, centre_anchor_aux, naive_edge_aux!, dac_edge_aux!)
+            for aux in (exact_aux, centre_anchor_aux)
                 redac_grid = copy(grid)
                 redac_voronoi!(redac_grid, sites; distance=metric, auxiliary=aux)
-                @test voronoi_equality(naive_grid, redac_grid)
+                @testset "$metric, $aux" begin
+                    @test voronoi_equality(naive_grid, redac_grid; distance=metric)
+                end
             end
         end
     end
@@ -104,12 +106,6 @@ end
         ) == 0
         @test @ballocated(
             centre_anchor_aux($grid, $sites, $TL, $(BR .÷ 2)), seconds = 1.0
-        ) == 0
-        @test @ballocated(
-            naive_edge_aux!($grid, $sites, $TL, $(BR .÷ 2)), seconds = 1.0
-        ) == 0
-        @test @ballocated(
-            dac_edge_aux!($grid, $sites, $TL, $(BR .÷ 2)), seconds = 1.0
         ) == 0
     end
 
@@ -122,12 +118,6 @@ end
         ) == 0
         @test @ballocated(
             redac_voronoi!($grid, $sites, auxiliary=centre_anchor_aux), seconds = 1.0
-        ) == 0
-        @test @ballocated(
-            redac_voronoi!($grid, $sites, auxiliary=naive_edge_aux!), seconds = 1.0
-        ) == 0
-        @test @ballocated(
-            redac_voronoi!($grid, $sites, auxiliary=dac_edge_aux!), seconds = 1.0
         ) == 0
     end
 end
