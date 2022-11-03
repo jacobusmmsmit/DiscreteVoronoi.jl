@@ -11,7 +11,7 @@ using Random: shuffle
 using StaticArrays
 using Distances: euclidean
 
-Coord = SVector{2,Int}
+const Coord = SVector{2,Int}
 
 # Completely non-exported files with core definitions
 include("EarlyStopper.jl") # Because every package needs at least one struct...

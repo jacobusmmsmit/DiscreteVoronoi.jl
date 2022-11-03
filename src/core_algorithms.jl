@@ -76,14 +76,14 @@ end
         end for corner in corners)...,)
         if allequal(site for (dist, site) in mins)
             # ... and if the closest site is unique
-            min_site = mins[1][1]
+            min_site = sites[mins[1][2]]
             dists = ((minimum(site for site in sites if site != min_site) do site
                 distance(corner, site)
             end for corner in corners)...,)
             if all(zip(mins, dists)) do ((min_dist, _), dist)
                     dist > min_dist
                 end
-                grid[t:b, l:r] .= min_site
+                grid[TL[1]:BR[1], TL[2]:BR[2]] .= Ref(min_site)
                 return nothing
             end
         end
@@ -123,14 +123,14 @@ end
         end for corner in corners)...,)
         if allequal(site for (dist, site) in mins)
             # ... and if the closest site is unique
-            min_site = mins[1][1]
+            min_site = sites[mins[1][2]]
             dists = ((minimum(site for site in sites if site != min_site) do site
                 distance(corner, site)
             end for corner in corners)...,)
             if all(zip(mins, dists)) do ((min_dist, _), dist)
                     dist > min_dist
                 end
-                grid[t:b, l:r] .= min_site
+                grid[TL[1]:BR[1], TL[2]:BR[2]] .= Ref(min_site)
                 return nothing
             end
         end
