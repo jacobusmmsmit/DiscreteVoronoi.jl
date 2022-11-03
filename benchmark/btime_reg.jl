@@ -32,7 +32,7 @@ for s in [1, 2, 4, 8, 16, 32, 64]
     println("redac_voronoi!")
     for site_find in [no_site_find, original_site_find, center_site_find]
         @show site_find
-        for site_filter in [naive_site_filter, center_site_filter, anchor_site_filter, corner_site_filter]
+        for site_filter in [original_site_filter, center_site_filter, anchor_site_filter, corner_site_filter]
             @show site_filter
             @btime redac_voronoi!(grid, sites, site_find, site_filter, euclidean, 0) setup=(
                 sites = reg_sites(Int, $n, $n, $s);

@@ -6,7 +6,7 @@ export naive_voronoi!
 export jfa_voronoi!, jfa_voronoi_parallel!
 export no_site_find, original_site_find, center_site_find
 export dac_voronoi!
-export naive_site_filter, center_site_filter, anchor_site_filter, corner_site_filter, edge_site_filter
+export original_site_filter, center_site_filter, anchor_site_filter, corner_site_filter, edge_site_filter
 export redac_voronoi!
 
 @inbounds function preset_voronoi!(grid, sites)
@@ -148,9 +148,10 @@ end
     return grid
 end
 
-@inbounds function naive_site_filter(::Val{:filter}, grid, sites, rect, distance)
+@inbounds function original_site_filter(::Val{:filter}, grid, sites, rect, distance)
     corners = get_corners(rect)
     return collect(_filter(sites) do site1
+        in_rectangle(rect, site1[2]) ||
         _all(sites) do site2
             _any(corners) do corner
                 distance(site1[2], corner) <= distance(site2[2], corner)
@@ -158,9 +159,10 @@ end
         end
     end)
 end
-@inbounds function naive_site_filter(::Val{:partition}, grid, sites, rect, distance)
+@inbounds function original_site_filter(::Val{:partition}, grid, sites, rect, distance)
     corners = get_corners(rect)
     return unstable_partition!(sites) do site1
+        in_rectangle(rect, site1[2]) ||
         _all(sites) do site2
             _any(corners) do corner
                 distance(site1[2], corner) <= distance(site2[2], corner)
@@ -177,6 +179,7 @@ end
     (t, l), (b, r) = rect
     max_dist = min_dist + distance((b, r), (t, l)) + 1
     return collect(_filter(sites) do site
+        in_rectangle(rect, site[2]) ||
         distance(center, site[2]) <= max_dist
     end)
 end
@@ -188,6 +191,7 @@ end
     (t, l), (b, r) = rect
     max_dist = min_dist + distance((b, r), (t, l)) + 1
     return unstable_partition!(sites) do site
+        in_rectangle(rect, site[2]) ||
         distance(center, site[2]) <= max_dist
     end[1]
 end
@@ -199,6 +203,7 @@ end
     end
     corners = get_corners(rect)
     return collect(_filter(sites) do site
+        in_rectangle(rect, site[2]) ||
         _any(corners) do corner
             distance(site[2], corner) <= distance(sites[min_color][2], corner)
         end
@@ -211,6 +216,7 @@ end
     end
     corners = get_corners(rect)
     return unstable_partition!(sites) do site
+        in_rectangle(rect, site[2]) ||
         _any(corners) do corner
             distance(site[2], corner) <= distance(sites[min_color][2], corner)
         end
@@ -223,6 +229,7 @@ end
         distance(corner, site[2])
     end for corner in corners)...,)
     return collect(_filter(sites) do site
+        in_rectangle(rect, site[2]) ||
         _all(mins) do (_, min_color)
             _any(corners) do corner
                 distance(site[2], corner) <= distance(sites[min_color][2], corner)
@@ -236,6 +243,7 @@ end
         distance(corner, site[2])
     end for corner in corners)...,)
     return unstable_partition!(sites) do site
+        in_rectangle(rect, site[2]) ||
         _all(mins) do (_, min_color)
             _any(corners) do corner
                 distance(site[2], corner) <= distance(sites[min_color][2], corner)
@@ -251,6 +259,7 @@ end
     end for edge in edges)...,))
     corners = get_corners(rect)
     return collect(_filter(sites) do site
+        in_rectangle(rect, site[2]) ||
         _all(mins) do (_, min_color)
             _any(corners) do corner
                 distance(site[2], corner) <= distance(sites[min_color][2], corner)
@@ -265,6 +274,7 @@ end
     end for edge in edges)...,))
     corners = get_corners(rect)
     return unstable_partition!(sites) do site
+        in_rectangle(rect, site[2]) ||
         _all(mins) do (_, min_color)
             _any(corners) do corner
                 distance(site[2], corner) <= distance(sites[min_color][2], corner)

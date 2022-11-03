@@ -106,7 +106,7 @@ end
         @testset verbose=true "$method" begin
             for site_find in [no_site_find, original_site_find, center_site_find]
                 @testset verbose=true "$site_find" begin
-                    for site_filter in [naive_site_filter, center_site_filter, anchor_site_filter, corner_site_filter]
+                    for site_filter in [original_site_filter, center_site_filter, anchor_site_filter, corner_site_filter]
                         @testset verbose=true "$site_filter" begin
                             for distance in [cityblock, euclidean, chebyshev]
                                 @testset verbose=true "$distance" begin
@@ -137,7 +137,7 @@ end
     Random.seed!(42)
     for site_find in [no_site_find, original_site_find, center_site_find]
         @testset verbose=true "$site_find" begin
-        for site_filter in [naive_site_filter, center_site_filter, anchor_site_filter, corner_site_filter]
+        for site_filter in [original_site_filter, center_site_filter, anchor_site_filter, corner_site_filter]
                 @testset verbose=true "$site_filter" begin
                     for distance in [cityblock, euclidean, chebyshev]
                         @testset verbose=true "$distance" begin
@@ -162,7 +162,7 @@ end
     Random.seed!(42)
     for site_find in [no_site_find, original_site_find, center_site_find]
         @testset verbose=true "$site_find" begin
-            for site_filter in [naive_site_filter, center_site_filter, anchor_site_filter, corner_site_filter]
+            for site_filter in [original_site_filter, center_site_filter, anchor_site_filter, corner_site_filter]
                 @testset verbose=true "$site_filter" begin
                     for distance in [cityblock, euclidean, chebyshev]
                         @testset verbose=true "$distance" begin

@@ -107,6 +107,12 @@ end
     (round(Int, x[1]), round(Int, x[2]))
 end
 
+function in_rectangle(rect, point)
+    (t, l), (b, r) = rect
+    (x, y) = point
+    t <= x <= b && l <= y <= r
+end
+
 function get_center(rect)
     (t, l), (b, r) = rect
     ((t + b) / 2, (l + r) / 2)
@@ -137,22 +143,18 @@ end
 
 function rand_points(::Type{Int}, N, M, K)
     shuffle!([Iterators.product(1:N, 1:M)...])[1:min(M * N, K)]
-    # (shuffle!([Iterators.product(1:N, 1:M)...])[1:min(M * N, K)]...,)
 end
 
 function rand_sites(::Type{Int}, N, M, K)
     [(color, point) for (color, point) in enumerate(rand_points(Int, N, M, K))]
-    # (((color, point) for (color, point) in enumerate(rand_points(Int, N, M, K)))...,)
 end
 
 function rand_points(::Type{T}, N, M, K) where {T<:AbstractFloat}
     [(rand(Uniform(0, N)), rand(Uniform(0, M))) for k in 1:min(M * N, K)]
-    # ((rand(Uniform(0, N)), rand(Uniform(0, M))) for k in 1:min(M * N, K))
 end
 
 function rand_sites(::Type{T}, N, M, K) where {T<:AbstractFloat}
     [(color, point) for (color, point) in enumerate(rand_points(T, N, M, K))]
-    # (((color, point) for (color, point) in enumerate(rand_points(T, N, M, K)))...,)
 end
 
 function equal_grid_points(grid1, grid2, points, distance)
