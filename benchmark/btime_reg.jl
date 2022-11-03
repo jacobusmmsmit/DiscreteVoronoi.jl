@@ -18,7 +18,7 @@ for s in [1, 2, 4, 8, 16, 32, 64]
     @btime jfa_voronoi!(grid, sites) setup=(
         sites = reg_points(Int, $n, $n, $s);
         grid = zeros(Int, $n, $n)) evals=1 samples=1
-            
+
 
     println("dac_voronoi!")
     for site_find in [original_site_find, center_site_find]
@@ -42,4 +42,3 @@ for s in [1, 2, 4, 8, 16, 32, 64]
         end
     end
 end
-

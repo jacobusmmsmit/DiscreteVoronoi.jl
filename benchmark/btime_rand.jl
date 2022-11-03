@@ -12,18 +12,18 @@ for n in [400]
             Random.seed!(42);
             sites = rand_points(Int, $n, $n, $s);
             grid = zeros(Int, $n, $n)) evals=1
-             
+
 
         #= println("jfa_voronoi_parallel!")
         @btime jfa_voronoi_parallel!(grid, sites) setup=(
             Random.seed!(42);
             sites = rand_points(Int, $n, $n, $s);
             grid = zeros(Int, $n, $n)) evals=1 =#
-    
+
         if s <= n
             println("dac_voronoi!")
             # for site_find in [original_site_find, center_site_find]
-            for site_find in [original_site_find] 
+            for site_find in [original_site_find]
                 @show site_find
                 @btime dac_voronoi!(grid, sites, site_find, euclidean, 0) setup=(
                     Random.seed!(42);
@@ -63,4 +63,3 @@ for n in [400]
         end
     end
 end
-
