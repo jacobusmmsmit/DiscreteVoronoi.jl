@@ -7,7 +7,8 @@ using Distances
 
 include("helper_functions.jl")
 
-using DiscreteVoronoi: get_corners, voronoi_equality, exact_condition, exact_aux, centre_anchor_aux
+using DiscreteVoronoi: get_corners, voronoi_equality, exact_condition
+using DiscreteVoronoi: exact_aux, centre_anchor_aux, exact_aux_es, centre_anchor_aux_es
 using DiscreteVoronoi: EarlyStopper, early_stop_sort!
 
 const Coord = SVector{2,Int}
@@ -177,6 +178,31 @@ end
                         naive_voronoi!(grid1, points, distance=distance)
                         grid2 = zeros(Coord, (N, M))
                         redac_voronoi!(grid2, points, distance=distance, auxiliary=auxiliary)
+                        test_passes = test_passes && voronoi_equality(grid2, grid1; distance=distance)
+                        test_passes || break
+                    end
+                    test_passes ? (@test test_passes) : (@test_broken test_passes)
+                end
+            end
+        end
+    end
+end
+
+@testset verbose=true "redac_voronoi_es! matching results for Int sites" begin
+    Random.seed!(42)
+    for distance in [cityblock, euclidean, chebyshev]
+        @testset verbose=true "$distance" begin
+            for auxiliary in [exact_aux_es, centre_anchor_aux_es]
+                @testset "$auxiliary" begin
+                    test_passes = true
+                    for i in 1:REPETITIONS
+                        N, M = rand(1:100, 2)
+                        points = random_coordinates(N, M, rand(1:100))
+
+                        grid1 = zeros(Coord, (N, M))
+                        naive_voronoi!(grid1, points, distance=distance)
+                        grid2 = zeros(Coord, (N, M))
+                        redac_voronoi_es!(grid2, points, distance=distance, auxiliary=auxiliary)
                         test_passes = test_passes && voronoi_equality(grid2, grid1; distance=distance)
                         test_passes || break
                     end

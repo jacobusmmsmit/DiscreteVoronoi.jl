@@ -4,7 +4,7 @@ module DiscreteVoronoi
 #TODO: Add nice UnicodePlot recipe :)
 
 export find_closest_site, find_closest_site!, get_corners, get_quadrants, label_voronoi_grid, voronoi_equality # Helper functions
-export naive_voronoi!, jfa_voronoi!, dac_voronoi!, redac_voronoi! # Core functionality
+export naive_voronoi!, jfa_voronoi!, dac_voronoi!, redac_voronoi!, redac_voronoi_es! # Core functionality
 
 using LinearAlgebra: norm
 using Random: shuffle
