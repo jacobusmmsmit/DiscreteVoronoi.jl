@@ -15,14 +15,14 @@ function exact_condition(site, sites, TL, BR; distance=euclidean)
 end
 
 function centre_anchor_condition(site, sites, TL, BR; distance=euclidean)
-    centre = @. TL + BR / 2
+    centre = @. (TL + BR) / 2
     anchor = find_closest_site(centre, sites; distance=distance)
     corners = get_corners(TL, BR)
     return any(distance(site, corner) <= distance(anchor, corner) for corner in corners)
 end
 
 function centre_anchor_aux(grid, sites, TL, BR; distance=euclidean)
-    centre = @. TL + BR / 2
+    centre = @. (TL + BR) / 2
     anchor = find_closest_site(centre, sites; distance=distance)
     corners = get_corners(TL, BR)
     function predicate(site)
