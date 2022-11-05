@@ -14,16 +14,12 @@ for n in [10, 100, 1000]
             points = rand_points(Int, $n, $n, $s);
             grid = zeros(Int, $n, $n)) evals=1
 
-        for site_find in [no_site_find, original_site_find, center_site_find]
-            @show site_find
-            for site_filter in [center_site_filter, anchor_site_filter, corner_site_filter]
-                SUITE[string("grid ", n, "x", n)][string(s, " sites")][site_find][site_filter] = @benchmarkable redac_voronoi!(Val(:filter), grid, sites, site_find, site_filter) setup=(
-                    Random.seed!(42);
-                    sites = rand_sites(Int, $n, $n, $s);
-                    grid = preset_voronoi!(zeros(Int, $n, $n), sites);
-                    site_find = $site_find;
-                    site_filter = $site_filter) evals=1
-            end
+        for site_filter in [center_site_filter, anchor_site_filter, corner_site_filter]
+            SUITE[string("grid ", n, "x", n)][string(s, " sites")][site_find][site_filter] = @benchmarkable redac_voronoi!(Val(:filter), grid, sites, site_filter) setup=(
+                Random.seed!(42);
+                sites = rand_sites(Int, $n, $n, $s);
+                grid = preset_voronoi!(zeros(Int, $n, $n), sites);
+                site_filter = $site_filter) evals=1
         end
     end
 end

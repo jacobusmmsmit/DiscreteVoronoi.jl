@@ -4,7 +4,7 @@ using Polyester
 export preset_voronoi!, preset_voronoi_rounded!
 export naive_voronoi!
 export jfa_voronoi!, jfa_voronoi_parallel!
-export no_site_find, original_site_find, center_site_find
+export original_site_find, center_site_find
 export dac_voronoi!
 export original_site_filter, center_site_filter, anchor_site_filter, corner_site_filter, edge_site_filter
 export redac_voronoi!
@@ -30,7 +30,7 @@ end
 
 @inbounds function naive_voronoi!(grid, points, distance=euclidean)
     for y in axes(grid, 2), x in axes(grid, 1)
-        _, min_color = _findmin(points) do point
+        _, min_color = findmin(points) do point
             distance((x, y), point)
         end
         grid[x, y] = convert(eltype(grid), min_color)
@@ -80,34 +80,33 @@ end
 
 @inbounds function base_cases!(grid, sites, rect, distance)
     (t, l), (b, r) = rect
-    all(!=(0), @view grid[t:b, l:r]) && return true
     if length(sites) == 1
         grid[t:b, l:r] .= convert(eltype(grid), sites[1][1])
         return true
     end
-    if t == b && l == r
-        _, min_color = _findmin(sites) do site
-            distance((t, l), site[2])
+    if t == b && l == r 
+        if grid[t, l] == zero(eltype(grid))
+            _, min_color = findmin(sites) do site
+                distance((t, l), site[2])
+            end
+            grid[t, l] = convert(eltype(grid), sites[min_color][1])
         end
-        grid[t, l] = convert(eltype(grid), sites[min_color][1])
         return true
     end
-    return false
+    return all(!=(zero(eltype(grid))), @view grid[t:b, l:r])
 end
-
-no_site_find(grid, sites, rect, distance) = false
 
 @inbounds function original_site_find(grid, sites, rect, distance)
     corners = get_corners(rect)
-    mins = ((_findmin(sites) do site
+    mins = ((findmin(sites) do site
         distance(corner, site[2])
     end for corner in corners)...,)
     allequal(color for (dist, color) in mins) || return false
     min_color = minimum(color for (dist, color) in mins)
-    dists = ((_minimum(point for (color, point) in sites if color != min_color) do point
+    dists = ((minimum(point for (color, point) in sites if color != min_color) do point
         distance(corner, point)
     end for corner in corners)...,)
-    _any(zip(mins, dists)) do ((min_dist, _), dist)
+    any(zip(mins, dists)) do ((min_dist, _), dist)
         dist <= min_dist
     end && return false
     (t, l), (b, r) = rect
@@ -117,10 +116,10 @@ end
 
 @inbounds function center_site_find(grid, sites, rect, distance)
     center = get_center(rect)
-    min_dist, min_color = _findmin(sites) do site
+    min_dist, min_color = findmin(sites) do site
         distance(center, site[2])
     end
-    dist = _minimum(point for (color, point) in sites if color != min_color) do point
+    dist = minimum(point for (color, point) in sites if color != min_color) do point
         distance(center, point)
     end
     (t, l), (b, r) = rect
@@ -150,10 +149,10 @@ end
 
 @inbounds function original_site_filter(::Val{:filter}, grid, sites, rect, distance)
     corners = get_corners(rect)
-    return collect(_filter(sites) do site1
+    return collect(filter(sites) do site1
         in_rectangle(rect, site1[2]) ||
-        _all(sites) do site2
-            _any(corners) do corner
+        all(sites) do site2
+            any(corners) do corner
                 distance(site1[2], corner) <= distance(site2[2], corner)
             end
         end
@@ -163,8 +162,8 @@ end
     corners = get_corners(rect)
     return unstable_partition!(sites) do site1
         in_rectangle(rect, site1[2]) ||
-        _all(sites) do site2
-            _any(corners) do corner
+        all(sites) do site2
+            any(corners) do corner
                 distance(site1[2], corner) <= distance(site2[2], corner)
             end
         end
@@ -173,19 +172,19 @@ end
 
 @inbounds function center_site_filter(::Val{:filter}, grid, sites, rect, distance)
     center = get_center(rect)
-    min_dist = _minimum(sites) do site
+    min_dist = minimum(sites) do site
         distance(center, site[2])
     end
     (t, l), (b, r) = rect
     max_dist = min_dist + distance((b, r), (t, l)) + 1
-    return collect(_filter(sites) do site
+    return collect(filter(sites) do site
         in_rectangle(rect, site[2]) ||
         distance(center, site[2]) <= max_dist
     end)
 end
 @inbounds function center_site_filter(::Val{:partition}, grid, sites, rect, distance)
     center = get_center(rect)
-    min_dist = _minimum(sites) do site
+    min_dist = minimum(sites) do site
         distance(center, site[2])
     end
     (t, l), (b, r) = rect
@@ -198,26 +197,26 @@ end
 
 @inbounds function anchor_site_filter(::Val{:filter}, grid, sites, rect, distance)
     center = get_center(rect)
-    _, min_color = _findmin(sites) do site
+    _, min_color = findmin(sites) do site
         distance(center, site[2])
     end
     corners = get_corners(rect)
-    return collect(_filter(sites) do site
+    return collect(filter(sites) do site
         in_rectangle(rect, site[2]) ||
-        _any(corners) do corner
+        any(corners) do corner
             distance(site[2], corner) <= distance(sites[min_color][2], corner)
         end
     end)
 end
 @inbounds function anchor_site_filter(::Val{:partition}, grid, sites, rect, distance)
     center = get_center(rect)
-    _, min_color = _findmin(sites) do site
+    _, min_color = findmin(sites) do site
         distance(center, site[2])
     end
     corners = get_corners(rect)
     return unstable_partition!(sites) do site
         in_rectangle(rect, site[2]) ||
-        _any(corners) do corner
+        any(corners) do corner
             distance(site[2], corner) <= distance(sites[min_color][2], corner)
         end
     end[1]
@@ -225,13 +224,13 @@ end
 
 @inbounds function corner_site_filter(::Val{:filter}, grid, sites, rect, distance)
     corners = get_corners(rect)
-    mins = ((_findmin(sites) do site
+    mins = ((findmin(sites) do site
         distance(corner, site[2])
     end for corner in corners)...,)
-    return collect(_filter(sites) do site
+    return collect(filter(sites) do site
         in_rectangle(rect, site[2]) ||
-        _all(mins) do (_, min_color)
-            _any(corners) do corner
+        all(mins) do (_, min_color)
+            any(corners) do corner
                 distance(site[2], corner) <= distance(sites[min_color][2], corner)
             end
         end
@@ -239,13 +238,13 @@ end
 end
 @inbounds function corner_site_filter(::Val{:partition}, grid, sites, rect, distance)
     corners = get_corners(rect)
-    mins = ((_findmin(sites) do site
+    mins = ((findmin(sites) do site
         distance(corner, site[2])
     end for corner in corners)...,)
     return unstable_partition!(sites) do site
         in_rectangle(rect, site[2]) ||
-        _all(mins) do (_, min_color)
-            _any(corners) do corner
+        all(mins) do (_, min_color)
+            any(corners) do corner
                 distance(site[2], corner) <= distance(sites[min_color][2], corner)
             end
         end
@@ -254,14 +253,14 @@ end
 
 @inbounds function edge_site_filter(::Val{:filter}, grid, sites, rect, distance)
     edges = get_edges(rect)
-    mins = unique(((_findmin(sites) do site
+    mins = unique(((findmin(sites) do site
         distance(edge, site[2])
     end for edge in edges)...,))
     corners = get_corners(rect)
-    return collect(_filter(sites) do site
+    return collect(filter(sites) do site
         in_rectangle(rect, site[2]) ||
-        _all(mins) do (_, min_color)
-            _any(corners) do corner
+        all(mins) do (_, min_color)
+            any(corners) do corner
                 distance(site[2], corner) <= distance(sites[min_color][2], corner)
             end
         end
@@ -269,48 +268,46 @@ end
 end
 @inbounds function edge_site_filter(::Val{:partition}, grid, sites, rect, distance)
     edges = get_edges(rect)
-    mins = unique(((_findmin(sites) do site
+    mins = unique(((findmin(sites) do site
         distance(edge, site[2])
     end for edge in edges)...,))
     corners = get_corners(rect)
     return unstable_partition!(sites) do site
         in_rectangle(rect, site[2]) ||
-        _all(mins) do (_, min_color)
-            _any(corners) do corner
+        all(mins) do (_, min_color)
+            any(corners) do corner
                 distance(site[2], corner) <= distance(sites[min_color][2], corner)
             end
         end
     end[1]
 end
 
-@inbounds function redac_voronoi!(method::Val{:filter}, grid, sites, site_find, site_filter, distance=euclidean, depth::Int=1, rect=((1, 1), size(grid)))
-    base_cases!(grid, sites, rect, distance) && return grid
-    site_find(grid, sites, rect, distance) && return grid
-    filtered_sites = site_filter(method, grid, sites, rect, distance)
+@inbounds function redac_voronoi!(method::Val{:filter}, grid, sites, site_filter, distance=euclidean, depth::Int=1, rect=((1, 1), size(grid)))
+    local_sites = site_filter(method, grid, sites, rect, distance)
+    base_cases!(grid, local_sites, rect, distance) && return grid
     quadrants = get_quadrants(rect)
     if depth > 0
         Threads.@threads for quadrant in quadrants
-            redac_voronoi!(method, grid, filtered_sites, site_find, site_filter, distance, depth - 1, quadrant)
+            redac_voronoi!(method, grid, local_sites, site_filter, distance, depth - 1, quadrant)
         end
     else
         for quadrant in quadrants
-            redac_voronoi!(method, grid, filtered_sites, site_find, site_filter, distance, depth - 1, quadrant)
+            redac_voronoi!(method, grid, local_sites, site_filter, distance, depth - 1, quadrant)
         end
     end
     grid
 end
-@inbounds function redac_voronoi!(method::Val{:partition}, grid, sites, site_find, site_filter, distance=euclidean, depth::Int=1, rect=((1, 1), size(grid)))
-    base_cases!(grid, sites, rect, distance) && return grid
-    site_find(grid, sites, rect, distance) && return grid
-    filtered_sites = site_filter(method, grid, sites, rect, distance)
+@inbounds function redac_voronoi!(method::Val{:partition}, grid, sites, site_filter, distance=euclidean, depth::Int=1, rect=((1, 1), size(grid)))
+    local_sites = site_filter(method, grid, sites, rect, distance)
+    base_cases!(grid, local_sites, rect, distance) && return grid
     quadrants = get_quadrants(rect)
     if depth > 0
         Threads.@threads for quadrant in quadrants
-            redac_voronoi!(method, grid, copy(filtered_sites), site_find, site_filter, distance, depth - 1, quadrant)
+            redac_voronoi!(method, grid, copy(local_sites), site_filter, distance, depth - 1, quadrant)
         end
     else
         for quadrant in quadrants
-            redac_voronoi!(method, grid, filtered_sites, site_find, site_filter, distance, depth - 1, quadrant)
+            redac_voronoi!(method, grid, local_sites, site_filter, distance, depth - 1, quadrant)
         end
     end
     grid
