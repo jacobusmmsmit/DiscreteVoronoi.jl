@@ -121,6 +121,35 @@ end
 
 const REPETITIONS = 100
 
+@testset "unstable_partition! working" begin
+    function test(site, N, M) 
+        global counter
+        counter += 1
+        (site[1] < N ÷ 2 && site[2] < M ÷ 2) || 
+        (site[1] > N ÷ 2 && site[2] > M ÷ 2)
+    end
+    Random.seed!(42)
+    test_passes = true
+    for i in 1:REPETITIONS
+        N, M = rand(1:100, 2)
+        sites = random_coordinates(N, M, rand(1:100))
+
+        global counter = 0
+        trues, falses = unstable_partition!(sites) do site
+            test(site, N, M)
+        end
+        test_passes = test_passes && counter == length(sites)
+        for site in sites
+            if test(site, N, M) 
+                test_passes = test_passes && site in trues 
+            else 
+                test_passes = test_passes && site in falses
+            end
+        end
+    end
+    test_passes ? (@test test_passes) : (@test_broken test_passes)
+end
+
 @testset verbose=true "jfa_voronoi! working for Int sites" begin
     Random.seed!(42)
     for distance in [cityblock, euclidean, chebyshev]

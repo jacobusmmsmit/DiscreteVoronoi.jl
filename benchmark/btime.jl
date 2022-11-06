@@ -24,7 +24,8 @@ for n in [400]
             @btime dac_voronoi!(grid, sites) setup=(
                 Random.seed!(42);
                 grid = zeros(Coord, ($n, $n));
-                sites = random_coordinates(size(grid)..., $s)) evals=1
+                sites = random_coordinates(size(grid)..., $s);
+                preset_voronoi!(grid, sites)) evals=1
         end
     
         println("redac_voronoi!")
@@ -32,25 +33,29 @@ for n in [400]
         @btime redac_voronoi!(grid, sites, auxiliary=exact_aux) setup=(
             Random.seed!(42);
             grid = zeros(Coord, ($n, $n));
-            sites = random_coordinates(size(grid)..., $s)) evals=1
+            sites = random_coordinates(size(grid)..., $s);
+            preset_voronoi!(grid, sites)) evals=1
 
         @show centre_anchor_aux
         @btime redac_voronoi!(grid, sites, auxiliary=centre_anchor_aux) setup=(
             Random.seed!(42);
             grid = zeros(Coord, ($n, $n));
-            sites = random_coordinates(size(grid)..., $s)) evals=1
+            sites = random_coordinates(size(grid)..., $s);
+            preset_voronoi!(grid, sites)) evals=1
 
         println("redac_voronoi_es!")
         @show exact_aux_es
         @btime redac_voronoi_es!(grid, sites, auxiliary=exact_aux_es) setup=(
             Random.seed!(42);
             grid = zeros(Coord, ($n, $n));
-            sites = random_coordinates(size(grid)..., $s)) evals=1
+            sites = random_coordinates(size(grid)..., $s);
+            preset_voronoi!(grid, sites)) evals=1
 
         @show centre_anchor_aux_es
         @btime redac_voronoi_es!(grid, sites, auxiliary=centre_anchor_aux_es) setup=(
             Random.seed!(42);
             grid = zeros(Coord, ($n, $n));
-            sites = random_coordinates(size(grid)..., $s)) evals=1
+            sites = random_coordinates(size(grid)..., $s);
+            preset_voronoi!(grid, sites)) evals=1
     end
 end
